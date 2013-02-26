@@ -1,0 +1,6 @@
+*.o
+.*.d
+.redo
+tags
+libscsicmd.a
+include/ata_parse.h

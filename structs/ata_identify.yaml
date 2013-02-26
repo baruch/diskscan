@@ -1,0 +1,37 @@
+ata_identify:
+    not_ata_device:
+        bit: [0, 15]
+    response_incomplete:
+        bit: [0, 2]
+
+    serial_number:
+        string: [10, 19]
+
+    fw_rev:
+        string: [23, 26]
+
+    model:
+        string: [27, 46]
+
+    total_addressable_sectors_28bit:
+        longword: 60
+
+    address_28bit_supported:
+        bit: [69, 6]
+
+    smart_supported:
+        bit: [82, 0]
+
+    address_48bit_supported:
+        bit: [83, 10]
+
+    smart_self_test_supported:
+        bit: [84, 1]
+
+    smart_error_logging_supported:
+        bit: [84, 0]
+
+    smart_enabled:
+        bit: [85, 0]
+
+# vim:set et ts=4 sw=4:
