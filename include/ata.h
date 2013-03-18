@@ -4,20 +4,40 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-enum ata_passthrough_len_spec {
+typedef uint16_t ata_word_t;
+typedef uint32_t ata_longword_t;
+
+typedef enum passthrough_protocol_e {
+	PT_PROTO_HARDWARE_RESET = 0,
+	PT_PROTO_SOFTWARE_RESET = 1,
+	PT_PROTO_NON_DATA = 3,
+	PT_PROTO_PIO_DATA_IN = 4,
+	PT_PROTO_PIO_DATA_OUT = 5,
+	PT_PROTO_DMA = 6,
+	PT_PROTO_DMA_QUEUED = 7,
+	PT_PROTO_EXECUTE_DEVICE_DIAGNOSTIC = 8,
+	PT_PROTO_DEVICE_RESET = 9,
+	PT_PROTO_UDMA_DATA_IN = 10,
+	PT_PROTO_UDMA_DATA_OUT = 11,
+	PT_PROTO_FPDMA = 12,
+	PT_PROTO_RETURN_RESPONSE_INFO = 15,
+} passthrough_protocol_e;
+
+typedef enum ata_passthrough_len_spec_e {
 	ATA_PT_LEN_SPEC_NONE         = 0,
 	ATA_PT_LEN_SPEC_FEATURES     = 1,
 	ATA_PT_LEN_SPEC_SECTOR_COUNT = 2,
 	ATA_PT_LEN_SPEC_TPSIU        = 3,
-};
+} ata_passthrough_len_spec_e;
 
-typedef uint16_t ata_word_t;
-typedef uint32_t ata_longword_t;
-
-static inline unsigned char ata_passthrough_flags_2(int offline, int ck_cond, int direction_in, int transfer_block, enum ata_passthrough_len_spec len_spec)
-{
-	return ((offline & 3) << 6) | (ck_cond&1) | ((direction_in & 1) << 3) | ((transfer_block & 1) << 2) | (len_spec & 3);
-}
+typedef struct ata_status_t {
+	uint8_t extend;
+	uint8_t error;
+	uint8_t device;
+	uint8_t status;
+	uint16_t sector_count;
+	uint64_t lba;
+} ata_status_t;
 
 static inline ata_word_t ata_get_word(const char *buf, int word)
 {
@@ -81,5 +101,56 @@ static inline ata_longword_t ata_get_longword(const char *buf, int start_word)
 }
 
 bool ata_inquiry_checksum_verify(const char *buf, int buf_len);
+
+static inline unsigned char ata_passthrough_flags_2(int offline, int ck_cond, int direction_in, int transfer_block, ata_passthrough_len_spec_e len_spec)
+{
+	return ((offline & 3) << 6) | ((ck_cond&1)<<5) | ((direction_in & 1) << 3) | ((transfer_block & 1) << 2) | (len_spec & 3);
+}
+
+static inline int cdb_ata_passthrough_12(unsigned char *cdb, uint8_t command, uint8_t feature, uint32_t lba, uint8_t sector_count, passthrough_protocol_e protocol, bool dir_in, int ck_cond)
+{
+	cdb[0] = 0xA1;
+	cdb[1] = protocol<<1;
+	cdb[2] = ata_passthrough_flags_2(0, ck_cond, dir_in, 1, ATA_PT_LEN_SPEC_SECTOR_COUNT);
+	cdb[3] = feature;
+	cdb[4] = sector_count;
+	cdb[5] = lba & 0xFF;
+	cdb[6] = (lba >> 8) & 0xFF;
+	cdb[7] = (lba >> 16) & 0xFF;
+	cdb[8] = (lba >> 24) & 0x0F; // 28-bit addressing
+	cdb[9] = command;
+
+	cdb[10] = cdb[11] = 0;
+
+	return 12;
+}
+
+static inline int cdb_ata_identify(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_12(cdb, 0xEC, 0x00, 0x0, 1, PT_PROTO_PIO_DATA_IN, true, 0);
+}
+
+static inline int cdb_ata_smart_return_status(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xDA, 0xC24F<<8, 1, PT_PROTO_DMA, true, 1);
+}
+
+bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_t *status);
+
+static inline bool ata_smart_return_status_result(unsigned char *sense, int sense_len, bool *smart_ok)
+{
+	ata_status_t status;
+	if (!ata_status_from_scsi_sense(sense, sense_len, &status))
+		return false;
+
+	if (status.lba >> 8 == 0xC24F)
+		*smart_ok = true;
+	else if (status.lba >> 8 == 0x2CF4)
+		*smart_ok = false;
+	else
+		return false;
+
+	return true;
+}
 
 #endif

@@ -34,4 +34,28 @@ ata_identify:
     smart_enabled:
         bit: [85, 0]
 
+    sense_data_supported:
+        bit: [119, 6]
+
+    write_uncorrectable_supported:
+        bit: [119, 2]
+
+    sense_data_enabled:
+        bit: [120, 6]
+
+    write_uncorrectable_enabled:
+        bit: [120, 2]
+
+    
+    sct_data_tables_supported:
+        bit: [206, 5]
+    sct_feature_control_supported:
+        bit: [206, 4]
+    sct_error_recovery_control_supported:
+        bit: [206, 3]
+    sct_write_same_supported:
+        bit: [206, 2]
+    sct_command_transport_supported:
+        bit: [206, 0]
+
 # vim:set et ts=4 sw=4:

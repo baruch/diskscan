@@ -1,1 +1,1 @@
-redo-ifchange tags libscsicmd.a
+redo-ifchange tags libscsicmd.a tests
