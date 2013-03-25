@@ -13,11 +13,47 @@ ata_identify:
     model:
         string: [27, 46]
 
+#    max_num_sectors_transfer_per_drq_multiple:
+#        byte: [40, 1]
+
+    trusted_computing_supported:
+        bit: [48, 0]
+
+    standby_timer_values_settable:
+        bit: [49, 13]
+    iordy_supported:
+        bit: [49, 11]
+    iordy_disable_supported:
+        bit: [49, 10]
+    dma_supported:
+        bit: [49, 8]
+#    alignment_error_reporting_field:
+#        bits: [49, 0, 1]
+
+#    free_fall_sensitivity:
+#        bits: [53, 8, 15]
+    fields_valid_word_88:
+        bit: [53, 2]
+    fields_valid_words_64_70:
+        bit: [53, 1]
+
+    block_erase_supported:
+        bit: [59, 15]
+    overwrite_supported:
+        bit: [59, 14]
+    crypto_scramble_supported:
+        bit: [59, 13]
+    sanitize_supported:
+        bit: [59, 12]
+
     total_addressable_sectors_28bit:
         longword: 60
 
     address_28bit_supported:
         bit: [69, 6]
+
+#    queue_depth:
+#        bits: [75, 0, 4]
 
     smart_supported:
         bit: [82, 0]
