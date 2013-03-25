@@ -4,3 +4,6 @@
 tags
 libscsicmd.a
 include/ata_parse.h
+test/ata_identify
+test/*_dump.[ch]
+test/ata_smart_return_status
