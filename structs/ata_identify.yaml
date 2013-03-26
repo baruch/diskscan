@@ -71,7 +71,7 @@ ata_identify:
         bit: [69, 4]
     extended_number_of_user_addressable_sectors:
         bit: [69, 3]
-    non_volatiel_cache:
+    non_volatile_cache:
         bit: [69, 2]
 
 #    queue_depth:
