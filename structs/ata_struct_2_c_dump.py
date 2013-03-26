@@ -26,7 +26,11 @@ kinds = {
 }
 
 def emit_header_single(name, struct):
-	for field, info in struct.items():
+	field_names = struct.keys()
+	field_names.sort()
+
+	for field in field_names:
+		info = struct[field]
 		keys = info.keys()
 		assert(len(keys) == 1)
 		kind = keys[0]
