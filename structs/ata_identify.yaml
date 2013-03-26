@@ -49,8 +49,30 @@ ata_identify:
     total_addressable_sectors_28bit:
         longword: 60
 
+    cfast_supported:
+        bit: [69, 15]
+    drat_supported:
+        bit: [69, 14]
+    lps_misalignment_reporting_supported:
+        bit: [69, 13]
+    read_buffer_dma_supported:
+        bit: [69, 11]
+    write_buffer_dma_supported:
+        bit: [69, 10]
+    set_max_set_password_dma_and_set_max_unlock_dma_supported:
+        bit: [69, 9]
+    download_microcode_dma_supported:
+        bit: [69, 8]
     address_28bit_supported:
         bit: [69, 6]
+    rzat_supported:
+        bit: [69, 5]
+    encrypt_all_supported:
+        bit: [69, 4]
+    extended_number_of_user_addressable_sectors:
+        bit: [69, 3]
+    non_volatiel_cache:
+        bit: [69, 2]
 
 #    queue_depth:
 #        bits: [75, 0, 4]
