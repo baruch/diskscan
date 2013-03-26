@@ -77,6 +77,35 @@ ata_identify:
 #    queue_depth:
 #        bits: [75, 0, 4]
 
+    sata_automatic_partial_to_slumber_transitions_enabled:
+        bit: [79, 7]
+    sata_software_settings_preservation_enabled:
+        bit: [79, 6]
+    sata_hardware_feature_control_enabled:
+        bit: [79, 5]
+    sata_in_order_data_delivery_enabled:
+        bit: [79, 4]
+    sata_device_initiated_power_management_enabled:
+        bit: [79, 3]
+    sata_dma_setup_auto_activation_enabled:
+        bit: [79, 2]
+    sata_non_zero_buffer_offsets_enabled:
+        bit: [79, 1]
+
+    major_version_acs_2:
+        bit: [80, 9]
+    major_version_ata_8_acs:
+        bit: [80, 8]
+    major_version_ata_atapi_7:
+        bit: [80, 7]
+    major_version_ata_atapi_6:
+        bit: [80, 6]
+    major_version_ata_atapi_5:
+        bit: [80, 5]
+
+#    minor_version:
+#        word: 81
+
     smart_supported:
         bit: [82, 0]
 
