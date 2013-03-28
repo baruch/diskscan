@@ -40,17 +40,6 @@ void do_command(int fd)
 		return;
 	}
 
-	int i;
-	if (sense && sense_len > 0) {
-		printf("sense data:\n");
-		for (i = 0; i < sense_len; i++) {
-			if (i % 16 == 0)
-				printf("\n%02x  ", i);
-			printf("%02x ", sense[i]);
-		}
-		printf("\n");
-	}
-
 	ata_status_t status;
 	if (ata_status_from_scsi_sense(sense, sense_len, &status)) {
 		printf("extend: %d\n", status.extend);
