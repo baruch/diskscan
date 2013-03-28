@@ -169,4 +169,9 @@ static inline bool ata_smart_return_status_result(unsigned char *sense, int sens
 	return true;
 }
 
+static inline int cdb_ata_check_power_mode(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_12(cdb, 0xE5, 0, 0, 0, PT_PROTO_NON_DATA, true, 1);
+}
+
 #endif
