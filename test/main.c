@@ -28,6 +28,17 @@
 
 static unsigned char sense[128];
 
+void response_dump(unsigned char *buf, int buf_len)
+{
+	int i;
+	for (i = 0; i < buf_len; i++) {
+		if (i % 16 == 0)
+			printf("\n%02x  ", i);
+		printf("%02x ", buf[i]);
+	}
+	printf("\n");
+}
+
 bool submit_cmd(int fd, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_len, int dxfer_dir)
 {
 	sg_io_hdr_t hdr;
@@ -77,13 +88,7 @@ bool read_response(int fd, unsigned char **sensep, unsigned *sense_len)
 		*sense_len = hdr.sb_len_wr;
 
 		printf("sense data:\n");
-		int i;
-		for (i = 0; i < hdr.sb_len_wr; i++) {
-			if (i % 16 == 0)
-				printf("\n%02x  ", i);
-			printf("%02x ", sense[i]);
-		}
-		printf("\n");
+		response_dump(sense, hdr.sb_len_wr);
 	}
 	return true;
 }
