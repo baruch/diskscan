@@ -32,6 +32,27 @@ typedef char scsi_serial_t[SCSI_SERIAL_LEN+1];
 
 int cdb_tur(unsigned char *cdb);
 
+typedef enum scsi_device_type_e {
+	SCSI_DEV_TYPE_BLOCK = 0,
+	SCSI_DEV_TYPE_SEQ = 1,
+	SCSI_DEV_TYPE_PRINTER = 2,
+	SCSI_DEV_TYPE_PROCESSOR = 3,
+	SCSI_DEV_TYPE_WRITE_ONCE = 4,
+	SCSI_DEV_TYPE_CD = 5,
+	SCSI_DEV_TYPE_SCANNER = 6,
+	SCSI_DEV_TYPE_OPTICAL = 7,
+	SCSI_DEV_TYPE_MEDIA_CHANGER = 8,
+	SCSI_DEV_TYPE_COMMUNICATION = 9,
+	SCSI_DEV_TYPE_OBSOLETE_A = 0xA,
+	SCSI_DEV_TYPE_OBSOLETE_B = 0xB,
+	SCSI_DEV_TYPE_RAID = 0xC,
+	SCSI_DEV_TYPE_SES = 0xD,
+	SCSI_DEV_TYPE_RBC = 0xE,
+	SCSI_DEV_TYPE_OCRW = 0xF,
+	SCSI_DEV_TYPE_BCC = 0x10,
+	SCSI_DEV_TYPE_OSD = 0x11,
+} scsi_device_type_e;
+
 /* inquiry */
 int cdb_inquiry(unsigned char *cdb, bool evpd, char page_code, uint16_t alloc_len);
 static inline int cdb_inquiry_simple(unsigned char *cdb, uint16_t alloc_len) { return cdb_inquiry(cdb, 0, 0, alloc_len); }
