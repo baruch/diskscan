@@ -30,6 +30,25 @@ typedef char scsi_model_t[SCSI_MODEL_LEN+1];
 typedef char scsi_fw_revision_t[SCSI_FW_REVISION_LEN+1];
 typedef char scsi_serial_t[SCSI_SERIAL_LEN+1];
 
+enum sense_key_e {
+        SENSE_KEY_NO_SENSE = 0x0,
+        SENSE_KEY_RECOVERED_ERROR = 0x1,
+        SENSE_KEY_NOT_READY = 0x2,
+        SENSE_KEY_MEDIUM_ERROR = 0x3,
+        SENSE_KEY_HARDWARE_ERROR = 0x4,
+        SENSE_KEY_ILLEGAL_REQUEST = 0x5,
+        SENSE_KEY_UNIT_ATTENTION = 0x6,
+        SENSE_KEY_DATA_PROTECT = 0x7,
+        SENSE_KEY_BLANK_CHECK = 0x8,
+        SENSE_KEY_VENDOR_SPECIFIC = 0x9,
+        SENSE_KEY_COPY_ABORTED = 0xA,
+        SENSE_KEY_ABORTED_COMMAND = 0xB,
+        SENSE_KEY_RESERVED_C = 0xC,
+        SENSE_KEY_VOLUME_OVERFLOW = 0xD,
+        SENSE_KEY_MISCOMPARE = 0xE,
+        SENSE_KEY_COMPLETED = 0xF,
+};
+
 int cdb_tur(unsigned char *cdb);
 
 typedef enum scsi_device_type_e {
@@ -66,6 +85,58 @@ typedef enum scsi_device_type_e {
 	SCSI_DEV_TYPE_WELL_KNOWN = 0x1E,
 	SCSI_DEV_TYPE_UNKNOWN = 0x1F,
 } scsi_device_type_e;
+
+typedef struct ata_status_t {
+	uint8_t extend;
+	uint8_t error;
+	uint8_t device;
+	uint8_t status;
+	uint16_t sector_count;
+	uint64_t lba;
+} ata_status_t;
+
+/* sense parser */
+typedef struct sense_info_t {
+        bool is_fixed; // Else descriptor based
+        bool is_current; // Else for previous request
+        uint8_t sense_key;
+        uint8_t asc;
+        uint8_t ascq;
+        bool information_valid;
+        uint64_t information;
+        bool cmd_specific_valid;
+        uint64_t cmd_specific;
+        bool sense_key_specific_valid;
+        union {
+                struct {
+                        bool command_error;
+                        bool bit_pointer_valid;
+                        uint8_t bit_pointer;
+                        uint16_t field_pointer;
+                } illegal_request;
+                struct {
+                        uint16_t actual_retry_count;
+                } hardware_medium_recovered_error;
+                struct {
+                        double progress;
+                } not_ready;
+                struct {
+                        bool segment_descriptor;
+                        bool bit_pointer_valid;
+                        uint8_t bit_pointer;
+                        uint16_t field_pointer;
+                } copy_aborted;
+                struct {
+                        bool overflow;
+                } unit_attention;
+        } sense_key_specific;
+        bool fru_code_valid;
+        uint8_t fru_code;
+        bool ata_status_valid;
+        ata_status_t ata_status;
+        bool incorrect_len_indicator;
+} sense_info_t;
+bool scsi_parse_sense(unsigned char *sense, int sense_len, sense_info_t *info);
 
 /* inquiry */
 int cdb_inquiry(unsigned char *cdb, bool evpd, char page_code, uint16_t alloc_len);

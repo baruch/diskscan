@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "scsicmd.h"
 
 typedef uint16_t ata_word_t;
 typedef uint32_t ata_longword_t;
@@ -45,15 +46,6 @@ typedef enum ata_passthrough_len_spec_e {
 	ATA_PT_LEN_SPEC_SECTOR_COUNT = 2,
 	ATA_PT_LEN_SPEC_TPSIU        = 3,
 } ata_passthrough_len_spec_e;
-
-typedef struct ata_status_t {
-	uint8_t extend;
-	uint8_t error;
-	uint8_t device;
-	uint8_t status;
-	uint16_t sector_count;
-	uint64_t lba;
-} ata_status_t;
 
 static inline ata_word_t ata_get_word(const char *buf, int word)
 {

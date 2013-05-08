@@ -36,28 +36,16 @@ bool ata_inq_checksum(unsigned char *buf, int buf_len)
 
 bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_t *status)
 {
+        sense_info_t sense_info;
+
 	assert(status);
-	assert(sense[0] == 0x72); // Descriptor based sense for current command
-	assert(sense[8] == 9); // Descriptor type
-	assert(sense[9] == 12); // Descriptor length
-	assert(sense_len >= 22);
-	// TODO: Proper parsing and return false on parse failure
 
-	status->extend = sense[10] & 1;
-	status->error = sense[11];
+        bool parsed = scsi_parse_sense(sense, sense_len, &sense_info);
 
-	if (status->extend)
-		status->sector_count = sense[12]<<8 | sense[13];
-	else
-		status->sector_count = sense[13];
+        if (parsed && sense_info.ata_status_valid) {
+                *status = sense_info.ata_status;
+                return true;
+        }
 
-	if (status->extend)
-		status->lba = sense[15] | (sense[14]<<8) | (sense[17]<<16) | (sense[16]<<24) | ((uint64_t)sense[19]<<32) | ((uint64_t)sense[18]<<40);
-	else
-		status->lba = sense[15] | (sense[17]<<8) | (sense[19]<<16);
-
-	status->device = sense[20];
-	status->status = sense[21];
-
-	return true;
+        return false;
 }
