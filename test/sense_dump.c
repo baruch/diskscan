@@ -49,6 +49,7 @@ static void sense_dump_sense_info(sense_info_t *si)
                                 printf("Actual Retry Count: %d\n", si->sense_key_specific.hardware_medium_recovered_error.actual_retry_count);
                                 break;
                         case SENSE_KEY_NOT_READY:
+                        case SENSE_KEY_NO_SENSE:
                                 printf("Progress: %g%%\n", si->sense_key_specific.not_ready.progress);
                                 break;
                         case SENSE_KEY_COPY_ABORTED:
