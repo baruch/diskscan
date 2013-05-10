@@ -39,6 +39,7 @@ void do_command(int fd)
 		fprintf(stderr, "Error reading scsi response\n");
 		return;
 	}
+        printf("\n");
 
 	ata_status_t status;
 	if (ata_status_from_scsi_sense(sense, sense_len, &status)) {
@@ -48,6 +49,7 @@ void do_command(int fd)
 		printf("device: %02x\n", status.device);
 		printf("status: %02x\n", status.status);
 	}
+        printf("\n");
 
 	bool smart_ok;
 	if (ata_smart_return_status_result(sense, sense_len, &smart_ok))
