@@ -90,7 +90,7 @@ static bool parse_sense_fixed(unsigned char *sense, int sense_len, sense_info_t 
 
         //uint8_t additional_sense_len = sense[7];
 
-        return false;
+        return true;
 }
 
 static bool parse_sense_descriptor(unsigned char *sense, int sense_len, sense_info_t *info)
