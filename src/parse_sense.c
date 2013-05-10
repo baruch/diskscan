@@ -143,6 +143,9 @@ static bool parse_sense_descriptor(unsigned char *sense, int sense_len, sense_in
                         case 0x04: // Stream commands
                                 break;
                         case 0x05: // Block commands
+                                if (desc_len == 0x02) {
+                                        info->incorrect_len_indicator = sense[idx+3] & 0x20;
+                                }
                                 break;
                         case 0x06: // OSD object identification
                                 break;
