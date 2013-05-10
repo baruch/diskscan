@@ -17,6 +17,7 @@
 #include "ata.h"
 #include "ata_parse.h"
 #include "ata_identify_dump.h"
+#include "main.h"
 #include <stdio.h>
 #include <memory.h>
 #include <errno.h>
@@ -28,7 +29,6 @@
 
 void do_command(int fd)
 {
-	sg_io_hdr_t hdr;
 	unsigned char cdb[32];
 	unsigned char buf[512] ;
 	unsigned cdb_len = cdb_ata_identify(cdb);
