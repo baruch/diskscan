@@ -80,13 +80,14 @@ static bool parse_sense_fixed(unsigned char *sense, int sense_len, sense_info_t 
         info->sense_key = sense[2] & 0xF;
         info->asc = sense[12];
         info->ascq = sense[13];
-        info->fru_code = sense[14];
-        info->fru_code_valid = true;
-
-        parse_sense_key_specific(sense + 15, info);
 
         info->cmd_specific_valid = true;
         info->cmd_specific = scsi_get_32(sense, 8);
+
+        info->fru_code_valid = true;
+        info->fru_code = sense[14];
+
+        parse_sense_key_specific(sense + 15, info);
 
         //uint8_t additional_sense_len = sense[7];
 
