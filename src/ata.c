@@ -16,6 +16,7 @@
 
 #include "ata.h"
 #include <assert.h>
+#include <memory.h>
 
 bool ata_inq_checksum(unsigned char *buf, int buf_len)
 {
@@ -45,6 +46,25 @@ bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_
         if (parsed && sense_info.ata_status_valid) {
                 *status = sense_info.ata_status;
                 return true;
+        }
+        if (sense_info.is_fixed) {
+                // Fixed format parsing for ATA passthrough can't be known automatically
+                memset(status, 0, sizeof(*status));
+                status->error = sense_info.information & 0xFF;
+                status->status = (sense_info.information >> 8) & 0xFF;
+                status->device = (sense_info.information >> 16) & 0xFF;
+
+                status->sector_count = (sense_info.information >> 24) & 0xFF;
+
+                status->extend = sense_info.cmd_specific & 0x80;
+                uint32_t lba_high = (sense_info.cmd_specific >> 8) & 0xFF;
+                uint32_t lba_mid = (sense_info.cmd_specific >> 16) & 0xFF;
+                uint32_t lba_low = (sense_info.cmd_specific >> 24) & 0xFF;
+                status->lba = (lba_high << 16) | (lba_mid << 8) | lba_low;
+
+                // TODO: sector_count_upper_non_zero: sense_info.cmd_specific & 0x40
+                // TODO: lba upper non zero: sense_info.cmd_specific & 0x20
+                // TODO: log index: sense_info.cmd_specific & 0x07
         }
 
         return false;
