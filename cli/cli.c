@@ -20,11 +20,11 @@
 
 #include "verbose.h"
 #include "diskscan.h"
+#include "version.h"
 
 #include <stdio.h>
 #include <signal.h>
 
-static const char *version = "0.1";
 static disk_t disk;
 
 typedef struct options_t options_t;
@@ -35,13 +35,14 @@ struct options_t {
 
 void print_header(void)
 {
-	printf("diskscan version %s\n\n", version);
+	printf("diskscan version %s\n\n", TAG);
 	VERBOSE("Verbosity set");
 	VVERBOSE("High verbosity set");
 	VVVERBOSE("Very high verbosity set");
 }
 
 int usage(void) {
+	printf("diskscan version %s\n\n", TAG);
 	printf("diskscan [-v] /dev/sd\n");
 	return 1;
 }
