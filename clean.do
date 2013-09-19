@@ -1,2 +1,2 @@
 redo-always
-rm -f diskscan *.o {cli,lib}/*.[ao] tags
+rm -f diskscan {.,cli,lib}/*.{a,o,did} tags
