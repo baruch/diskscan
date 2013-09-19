@@ -1,0 +1,7 @@
+*.did
+*.o
+*.a
+*.d
+.do_built
+.do_built.dir
+.redo
