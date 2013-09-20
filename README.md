@@ -16,6 +16,13 @@ replacement if you don't have the full redo installed. As a shortcut for those
 who are used to the traditional Make there is a Makefile provided that does the
 right thing.
 
+Install
+-------
+
+make install
+
+You can control the DESTDIR when building packages and PREFIX if /usr is not right.
+
 License
 -------
 
