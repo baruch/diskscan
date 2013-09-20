@@ -1,6 +1,6 @@
 exec >&2
 redo-always
-redo version/clean
+redo version/clean Documentation/clean
 for dir in . cli lib; do
         rm -f $dir/*.a $dir/*.o $dir/*.did
 done

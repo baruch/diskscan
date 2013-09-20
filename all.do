@@ -1,1 +1,1 @@
-redo-ifchange diskscan tags
+redo-ifchange diskscan tags Documentation/all
