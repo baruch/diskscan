@@ -1,2 +1,7 @@
+exec >&2
 redo-always
-rm -f diskscan {.,cli,lib}/*.{a,o,did} tags
+redo version/clean
+for dir in . cli lib; do
+        rm -f $dir/*.a $dir/*.o $dir/*.did
+done
+rm -f diskscan tags
