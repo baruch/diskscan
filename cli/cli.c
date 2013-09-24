@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <signal.h>
+#include <inttypes.h>
 
 static disk_t disk;
 
@@ -64,9 +65,9 @@ void report_scan_done(disk_t *disk)
 	for (hist_idx = 0; hist_idx < ARRAY_SIZE(disk->histogram); hist_idx++)
 	{
 		if (hist_idx != ARRAY_SIZE(disk->histogram)-1)
-			printf("%8llu: %llu\n", histogram_time[hist_idx], disk->histogram[hist_idx]);
+			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx], disk->histogram[hist_idx]);
 		else
-			printf("%8s: %llu\n", "above that", disk->histogram[hist_idx]);
+			printf("%8s: %" PRIu64 "\n", "above that", disk->histogram[hist_idx]);
 	}
 }
 

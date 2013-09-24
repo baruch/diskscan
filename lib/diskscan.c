@@ -30,6 +30,7 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 #include <time.h>
+#include <inttypes.h>
 
 int disk_open(disk_t *disk, const char *path)
 {
@@ -128,7 +129,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		t_end.tv_nsec - t_start.tv_nsec;
 
 	if (ret != data_size) {
-		ERROR("Error when reading at offset %llu size %d read %d: %m", offset, data_size, ret);
+		ERROR("Error when reading at offset %" PRIu64 " size %d read %d: %m", offset, data_size, ret);
 		report_scan_error(disk, offset, data_size, t);
 		disk->num_errors++;
 	}
@@ -144,7 +145,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	disk->histogram[hist_idx]++;
 
 	if (t_msec > 1000) {
-		VERBOSE("Scanning at offset %llu took %llu", offset, t_msec);
+		VERBOSE("Scanning at offset %" PRIu64 " took %llu", offset, t_msec);
 	}
 }
 
