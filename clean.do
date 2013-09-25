@@ -1,7 +1,7 @@
 exec >&2
 redo-always
 redo version/clean Documentation/clean
-for dir in . cli lib; do
-        rm -f $dir/*.a $dir/*.o $dir/*.did
+for dir in . cli lib version; do
+        rm -f $dir/*.a $dir/*.o $dir/*.did $dir/.*.d
 done
-rm -f diskscan tags
+rm -rf diskscan tags .do_built .do_built.dir .redo
