@@ -52,7 +52,7 @@ will also emit an histogram at the end of the run in the form:
     above that: 0
     I: Closed disk /dev/sdg
 
-This means that all IOs in this case were between 100 and 600 msec and there
+This means that all I/Os in this case were between 100 and 600 msec and there
 were 120 chunks being read. Current these chunks are 1MB in size.
 
 # OPTIONS
