@@ -34,6 +34,7 @@ typedef struct options_t options_t;
 struct options_t {
 	char *disk_path;
 	int verbose;
+	int fix;
 };
 
 void print_header(void)
@@ -49,6 +50,7 @@ int usage(void) {
 	printf("diskscan [options] /dev/sd\n");
 	printf("Options:\n");
 	printf("    -v, --verbose   - Increase verbosity, multiple uses for higher levels\n");
+	printf("    -f, --fix       - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
 	printf("\n");
 	return 1;
 }
@@ -85,23 +87,26 @@ int parse_args(int argc, char **argv, options_t *opts)
 		int option_index = 0;
 		static struct option long_options[] = {
 			{"verbose", no_argument, 0,  'v'},
+			{"fix",     no_argument, 0,  'f'},
 			{0,         0,           0,  0}
 		};
 
-		c = getopt_long(argc, argv, "vr", long_options, &option_index);
+		c = getopt_long(argc, argv, "vf", long_options, &option_index);
 		if (c == -1)
 			break;
 
 		switch (c) {
 			case 0:
-				unknown = 1;
 				break;
+
 			case 'v':
 				opts->verbose++;
 				break;
+			case 'f':
+				opts->fix = 1;
+				break;
 
 			default:
-				printf("unknown arg\n");
 				unknown = 1;
 				break;
 		}
@@ -158,7 +163,7 @@ int diskscan_cli(int argc, char **argv)
 
 	setup_signals();
 
-	if (disk_open(&disk, opts.disk_path))
+	if (disk_open(&disk, opts.disk_path, opts.fix))
 		return 1;
 
 	if (print_disk_info(&disk))

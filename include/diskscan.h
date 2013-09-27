@@ -21,7 +21,7 @@ typedef struct disk_t {
 	uint64_t histogram[ARRAY_SIZE(histogram_time)];
 } disk_t;
 
-int disk_open(disk_t *disk, const char *path);
+int disk_open(disk_t *disk, const char *path, int fix);
 int disk_scan(disk_t *disk);
 int disk_close(disk_t *disk);
 void disk_scan_stop(disk_t *disk);

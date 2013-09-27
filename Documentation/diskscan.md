@@ -60,7 +60,11 @@ were 120 chunks being read. Current these chunks are 1MB in size.
 -v, --verbose
 :   display verbose information from the workings of the scan
     use multiple times for increased verbosity.
-    
+
+-f, --fix
+:   Attempt to fix areas that are nearing failure. This should only be
+    attempted on an unmounted block device and never on an inuse filesystem or
+    corruption is likely.
 
 # SEE ALSO
 

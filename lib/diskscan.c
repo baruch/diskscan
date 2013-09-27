@@ -31,8 +31,9 @@
 #include <linux/fs.h>
 #include <time.h>
 #include <inttypes.h>
+#include <errno.h>
 
-int disk_open(disk_t *disk, const char *path)
+int disk_open(disk_t *disk, const char *path, int fix)
 {
 	memset(disk, 0, sizeof(*disk));
 
@@ -41,12 +42,15 @@ int disk_open(disk_t *disk, const char *path)
 		ERROR("Disk path %s does not exist: %m", path);
 		return 1;
 	}
-	if (access(path, R_OK|W_OK)) {
+
+	const int access_mode_flag = fix ? R_OK|W_OK : R_OK;
+	if (access(path, access_mode_flag)) {
 		ERROR("Disk path %s is inaccessible: %m", path);
 		return 1;
 	}
 
-	disk->fd = open(path, O_RDONLY|O_DIRECT);
+	const int open_mode_flag = fix ? O_RDWR : O_RDONLY;
+	disk->fd = open(path, open_mode_flag|O_DIRECT);
 	if (disk->fd < 0) {
 		ERROR("Failed to open path %s: %m", path);
 		return 1;
@@ -146,6 +150,14 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 
 	if (t_msec > 1000) {
 		VERBOSE("Scanning at offset %" PRIu64 " took %llu", offset, t_msec);
+	}
+
+	if (t_msec > 3000) {
+		INFO("Fixing region by rewriting, offset=%d size=%d", offset, data_size);
+		ret = pwrite(disk->fd, data, data_size, offset);
+		if (ret != 0) {
+			ERROR("Error while attempting to rewrite the data! errno=%d: %m", errno);
+		}
 	}
 }
 
