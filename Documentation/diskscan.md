@@ -57,7 +57,7 @@ were 120 chunks being read. Current these chunks are 1MB in size.
 
 # OPTIONS
 
--v
+-v, --verbose
 :   display verbose information from the workings of the scan
     use multiple times for increased verbosity.
     

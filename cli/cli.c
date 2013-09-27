@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <signal.h>
 #include <inttypes.h>
+#include <unistd.h>
+#include <getopt.h>
 
 static disk_t disk;
 
@@ -44,7 +46,10 @@ void print_header(void)
 
 int usage(void) {
 	printf("diskscan version %s\n\n", TAG);
-	printf("diskscan [-v] /dev/sd\n");
+	printf("diskscan [options] /dev/sd\n");
+	printf("Options:\n");
+	printf("    -v, --verbose   - Increase verbosity, multiple uses for higher levels\n");
+	printf("\n");
 	return 1;
 }
 
@@ -73,35 +78,50 @@ void report_scan_done(disk_t *disk)
 
 int parse_args(int argc, char **argv, options_t *opts)
 {
-	int i;
-	int non_dash = -1;
+	int c;
 	int unknown = 0;
 
-	for (i = 1; i < argc; i++) {
-		char *arg = argv[i];
-		if (arg[0] == '-') {
-			int j;
-			for (j = 1; arg[j] != 0; j++) {
-				if (arg[j] == 'v')
-					opts->verbose++;
-				else
-					unknown = 1;
-			}
-		} else if (non_dash == -1) {
-			non_dash = i;
+	while (1) {
+		int option_index = 0;
+		static struct option long_options[] = {
+			{"verbose", no_argument, 0,  'v'},
+			{0,         0,           0,  0}
+		};
+
+		c = getopt_long(argc, argv, "vr", long_options, &option_index);
+		if (c == -1)
+			break;
+
+		switch (c) {
+			case 0:
+				unknown = 1;
+				break;
+			case 'v':
+				opts->verbose++;
+				break;
+
+			default:
+				printf("unknown arg\n");
+				unknown = 1;
+				break;
 		}
 	}
 
-	if (non_dash == -1) {
+	if (optind == argc) {
 		printf("No disk path provided to scan!\n");
 		return usage();
 	}
+	if (optind < argc - 1) {
+		printf("Too many disk paths provided to scan, can only scan one disk!\n");
+		return usage();
+	}
+
 	if (unknown) {
 		printf("Unknown option provided");
 		return usage();
 	}
 
-	opts->disk_path = argv[non_dash];
+	opts->disk_path = argv[optind];
 	return 0;
 }
 
