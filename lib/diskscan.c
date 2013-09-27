@@ -149,7 +149,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	disk->histogram[hist_idx]++;
 
 	if (t_msec > 1000) {
-		VERBOSE("Scanning at offset %" PRIu64 " took %llu", offset, t_msec);
+		VERBOSE("Scanning at offset %" PRIu64 " took %llu msec", offset, t_msec);
 	}
 
 	if (t_msec > 3000) {
