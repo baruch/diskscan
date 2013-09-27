@@ -1,5 +1,4 @@
 exec >&2
-redo-ifchange diskscan README.md Documentation/all
 
 : ${INSTALL:=install}
 : ${DESTDIR:=}
