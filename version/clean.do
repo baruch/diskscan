@@ -1,1 +1,1 @@
-rm -f *~ .*~ version.c vars gitvars
+rm -f *~ .*~ version.c vars gitvars *.o
