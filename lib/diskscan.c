@@ -20,6 +20,7 @@
 
 #include "diskscan.h"
 #include "verbose.h"
+#include "arch.h"
 
 #include <memory.h>
 #include <unistd.h>
@@ -27,8 +28,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <linux/fs.h>
 #include <time.h>
 #include <inttypes.h>
 #include <errno.h>
@@ -56,14 +55,8 @@ int disk_open(disk_t *disk, const char *path, int fix)
 		return 1;
 	}
 
-
-	if (ioctl(disk->fd, BLKGETSIZE64, &disk->num_bytes) < 0) {
-		ERROR("Can't get number of sectors of path %s: %m", path);
-		return 1;
-	}
-
-	if (ioctl(disk->fd, BLKSSZGET, &disk->sector_size) < 0) {
-		ERROR("Can't get sector size of path %s: %m", path);
+	if (get_block_device_size(disk->fd, &disk->num_bytes, &disk->sector_size) < 0) {
+		ERROR("Can't get block device size information for path %s: %m", path);
 		return 1;
 	}
 
@@ -109,7 +102,6 @@ static void *allocate_buffer(int buf_size)
 	if (!buf)
 		return NULL;
 
-	madvise(buf, buf_size, MADV_DONTFORK);
 	return buf;
 }
 
