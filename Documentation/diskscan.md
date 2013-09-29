@@ -9,12 +9,12 @@ diskscan - scan a disk for failed and near failure sectors
 
 # SYNOPSIS
 
-diskscan [options...] block_device
+`diskscan` [options...] *block_device*
 
 
 # DESCRIPTION
 
-diskscan is intended to check a disk and find any bad sectors already present
+`diskscan` is intended to check a disk and find any bad sectors already present
 and assess it for any possible sectors that are in the process of going bad.
 The operation is all read-only and can cause no direct damage to the data on
 the disk.
@@ -57,14 +57,15 @@ were 120 chunks being read. Current these chunks are 1MB in size.
 
 # OPTIONS
 
--v, --verbose
-:   display verbose information from the workings of the scan
-    use multiple times for increased verbosity.
+`-v`, `--verbose`
+  display verbose information from the workings of the scan
+  use multiple times for increased verbosity.
 
--f, --fix
-:   Attempt to fix areas that are nearing failure. This should only be
-    attempted on an unmounted block device and never on an inuse filesystem or
-    corruption is likely.
+`-f`, `--fix`
+  Attempt to fix areas that are nearing failure. This should only be
+  attempted on an unmounted block device and never on an inuse filesystem or
+  corruption is likely.
+
 
 # SEE ALSO
 
