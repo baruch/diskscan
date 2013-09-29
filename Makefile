@@ -5,7 +5,7 @@ clean:
 	./do clean
 
 install:
-	./do install
+	./do all install
 
 distclean:
 	./do clean
