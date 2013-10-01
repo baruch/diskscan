@@ -64,6 +64,64 @@ void report_scan_error(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, 
 {
 }
 
+static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
+{
+	unsigned i;
+
+	const uint32_t height = 30; // number of lines to fill
+	const uint32_t min_val = 0;
+	uint32_t max_val = 1;
+
+	for (i = 0; i < latency_graph_len; i++) {
+		if (max_val < latency_graph[i].latency_max_msec)
+			max_val = latency_graph[i].latency_max_msec;
+	}
+
+	const uint32_t height_interval = (max_val - min_val + 1) / (height - 3);
+
+	int j;
+	for (j = height; j > 0; j--) {
+		if (j % 5 == 0)
+			printf("%5u | ", j * height_interval);
+		else
+			printf("      | ");
+
+		for (i = 0; i < latency_graph_len; i++) {
+			uint32_t max_height = latency_graph[i].latency_max_msec / height_interval + 1;
+			uint32_t med_height = latency_graph[i].latency_median_msec / height_interval + 1;
+			uint32_t min_height = latency_graph[i].latency_min_msec / height_interval + 1;
+
+			if (max_height == med_height) {
+				max_height++;
+			}
+			if (med_height == min_height) {
+				med_height++;
+				if (max_height == med_height)
+					max_height++;
+			}
+
+			if (max_height != j && med_height != j && min_height != j) {
+				printf(" ");
+				continue;
+			}
+
+			if (max_height == j)
+				printf("^");
+			else if (med_height == j)
+				printf("*");
+			else
+				printf("_");
+		}
+		printf("\n");
+	}
+	printf("      +-");
+	for (i = 0; i < latency_graph_len; i++) {
+		printf("-");
+	}
+	printf("\n");
+
+}
+
 void report_scan_done(disk_t *disk)
 {
 	int hist_idx;
@@ -76,6 +134,8 @@ void report_scan_done(disk_t *disk)
 		else
 			printf("%8s: %" PRIu64 "\n", "above that", disk->histogram[hist_idx]);
 	}
+
+	print_latency(disk->latency_graph, disk->latency_graph_len);
 }
 
 int parse_args(int argc, char **argv, options_t *opts)
@@ -163,7 +223,7 @@ int diskscan_cli(int argc, char **argv)
 
 	setup_signals();
 
-	if (disk_open(&disk, opts.disk_path, opts.fix))
+	if (disk_open(&disk, opts.disk_path, opts.fix, 70))
 		return 1;
 
 	if (print_disk_info(&disk))

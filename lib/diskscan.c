@@ -21,8 +21,10 @@
 #include "diskscan.h"
 #include "verbose.h"
 #include "arch.h"
+#include "median.h"
 
 #include <memory.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -31,8 +33,16 @@
 #include <time.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <assert.h>
 
-int disk_open(disk_t *disk, const char *path, int fix)
+struct scan_state {
+	uint32_t latency_bucket;
+	uint64_t latency_stride;
+	uint32_t latency_count;
+	uint32_t *latency;
+};
+
+int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len)
 {
 	memset(disk, 0, sizeof(*disk));
 
@@ -57,24 +67,42 @@ int disk_open(disk_t *disk, const char *path, int fix)
 
 	if (get_block_device_size(disk->fd, &disk->num_bytes, &disk->sector_size) < 0) {
 		ERROR("Can't get block device size information for path %s: %m", path);
-		return 1;
+		goto Error;
 	}
 
 	if (disk->num_bytes == 0) {
 		ERROR("Invalid number of sectors");
-		return 1;
+		goto Error;
 	}
 
 	if (disk->sector_size == 0 || disk->sector_size % 512 != 0) {
 		ERROR("Invalid sector size %d", disk->sector_size);
-		return 1;
+		goto Error;
 	}
+
+#if 0
+	const uint64_t new_bytes_raw = disk->num_bytes / 10;
+	const uint64_t new_bytes_leftover = new_bytes_raw % 512;
+	const uint64_t new_bytes = new_bytes_raw - new_bytes_leftover;
+	disk->num_bytes = new_bytes;
+#endif
 
 	strncpy(disk->path, path, sizeof(disk->path));
 	disk->path[sizeof(disk->path)-1] = 0;
 
-	INFO("Opened disk %s", path);
+	disk->latency_graph_len = latency_graph_len;
+	disk->latency_graph = calloc(latency_graph_len, sizeof(latency_t));
+	if (disk->latency_graph == NULL) {
+		ERROR("Failed to allocate memory for latency graph data");
+		goto Error;
+	}
+
+	INFO("Opened disk %s sector size %u num bytes %llu", path, disk->sector_size, disk->num_bytes);
 	return 0;
+
+Error:
+	disk_close(disk);
+	return 1;
 }
 
 int disk_close(disk_t *disk)
@@ -82,6 +110,10 @@ int disk_close(disk_t *disk)
 	INFO("Closed disk %s", disk->path);
 	close(disk->fd);
 	disk->fd = -1;
+	if (disk->latency_graph) {
+		free(disk->latency_graph);
+		disk->latency_graph = NULL;
+	}
 	return 0;
 }
 
@@ -110,7 +142,57 @@ static void free_buffer(void *buf, int buf_size)
 	munmap(buf, buf_size);
 }
 
-static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size)
+static void latency_bucket_prepare(disk_t *disk, struct scan_state *state, uint64_t offset)
+{
+	assert(state->latency_bucket < disk->latency_graph_len);
+	latency_t *l = &disk->latency_graph[state->latency_bucket];
+	const uint64_t start_sector = offset / disk->sector_size;
+
+	VVERBOSE("bucket prepare bucket=%u", state->latency_bucket);
+
+	l->start_sector = start_sector;
+	l->latency_min_msec = UINT32_MAX;
+	state->latency_count = 0;
+}
+
+static void latency_bucket_finish(disk_t *disk, struct scan_state *state, uint64_t offset)
+{
+	latency_t *l = &disk->latency_graph[state->latency_bucket];
+	const uint64_t end_sector = offset / disk->sector_size;
+
+	VVERBOSE("bucket finish bucket=%d", state->latency_bucket);
+
+	l->end_sector = end_sector;
+	l->latency_median_msec = median(state->latency, state->latency_count);
+
+	state->latency_count = 0;
+	state->latency_bucket++;
+}
+
+static void latency_bucket_step_if_needed(disk_t *disk, struct scan_state *state, uint64_t offset)
+{
+	const uint64_t bucket = offset / disk->sector_size / (state->latency_stride + 1);
+
+	if (bucket != state->latency_bucket) {
+		latency_bucket_finish(disk, state, offset);
+		latency_bucket_prepare(disk, state, offset);
+	}
+}
+
+static void latency_bucket_add(disk_t *disk, uint64_t latency, struct scan_state *state)
+{
+	latency_t *l = &disk->latency_graph[state->latency_bucket];
+
+	if (latency < l->latency_min_msec)
+		l->latency_min_msec = latency;
+	if (l->latency_max_msec < latency)
+		l->latency_max_msec = latency;
+
+	// Collect info for median calculation later
+	state->latency[state->latency_count++] = latency;
+}
+
+static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size, uint64_t latency_stride, struct scan_state *state)
 {
 	ssize_t ret;
 	struct timespec t_start;
@@ -140,6 +222,8 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	}
 	disk->histogram[hist_idx]++;
 
+	latency_bucket_add(disk, t_msec, state);
+
 	if (t_msec > 1000) {
 		VERBOSE("Scanning at offset %" PRIu64 " took %llu msec", offset, t_msec);
 	}
@@ -151,6 +235,16 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 			ERROR("Error while attempting to rewrite the data! errno=%d: %m", errno);
 		}
 	}
+}
+
+static uint64_t calc_latency_stride(disk_t *disk)
+{
+	const uint64_t num_sectors = disk->num_bytes / disk->sector_size;
+	const uint64_t stride_size = num_sectors / disk->latency_graph_len;
+	// At this stage stride_size may have a reminder, we need to distribute the
+	// latencies a bit more to avoid it Since the remainder can never be more
+	// than the latency_graph_len we can just add one entry to all the buckets
+	return stride_size + 1;
 }
 
 int disk_scan(disk_t *disk)
@@ -167,19 +261,31 @@ int disk_scan(disk_t *disk)
 		return 1;
 	}
 
-
+	struct scan_state state;
 	uint64_t offset;
 	const uint64_t disk_size_bytes = disk->num_bytes;
+	const uint64_t latency_stride = calc_latency_stride(disk);
+	VVERBOSE("latency stride is %llu", latency_stride);
 
+	state.latency_bucket = 0;
+	state.latency_stride = latency_stride;
+	state.latency_count = 0;
+	state.latency = malloc(sizeof(uint32_t) * latency_stride);
+
+	latency_bucket_prepare(disk, &state, 0);
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += data_size) {
-		VVERBOSE("Scanning at offset %llu out of %llu (%.2f%%)", offset, disk_size_bytes, (float)offset*100.0/(float)disk_size_bytes);
+		VVVERBOSE("Scanning at offset %llu out of %llu (%.2f%%)", offset, disk_size_bytes, (float)offset*100.0/(float)disk_size_bytes);
+		latency_bucket_step_if_needed(disk, &state, offset);
 		uint64_t remainder = disk_size_bytes - offset;
 		if (remainder < data_size) {
 			data_size = remainder;
 			VERBOSE("Last part scanning size %d", data_size);
 		}
-		disk_scan_part(disk, offset, data, data_size);
+		disk_scan_part(disk, offset, data, data_size, latency_stride, &state);
 	}
+	latency_bucket_finish(disk, &state, offset);
+	free(state.latency);
+
 	if (!disk->run) {
 		INFO("Disk scan interrupted");
 	}
