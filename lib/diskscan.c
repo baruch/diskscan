@@ -124,8 +124,8 @@ void disk_scan_stop(disk_t *disk)
 
 static int decide_buffer_size(disk_t *disk)
 {
-	// TODO: Should use 1MB first and switch to sector size on errors, this will get the best speed overall and enough granularity.
-	return 1024*1024;
+	// TODO: Should use 64KB first and switch to sector size on errors, this will get the best speed overall and enough granularity.
+	return 64*1024;
 }
 
 static void *allocate_buffer(int buf_size)
