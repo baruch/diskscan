@@ -40,7 +40,17 @@ struct scan_state {
 	uint64_t latency_stride;
 	uint32_t latency_count;
 	uint32_t *latency;
+	void *data;
 };
+
+enum scan_mode str_to_scan_mode(const char *s)
+{
+	if (strcasecmp(s, "seq") == 0 || strcasecmp(s, "sequential") == 0)
+		return SCAN_MODE_SEQ;
+	if (strcasecmp(s, "random") == 0)
+		return SCAN_MODE_RANDOM;
+	return SCAN_MODE_UNKNOWN;
+}
 
 int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len)
 {
@@ -169,16 +179,6 @@ static void latency_bucket_finish(disk_t *disk, struct scan_state *state, uint64
 	state->latency_bucket++;
 }
 
-static void latency_bucket_step_if_needed(disk_t *disk, struct scan_state *state, uint64_t offset)
-{
-	const uint64_t bucket = offset / disk->sector_size / (state->latency_stride + 1);
-
-	if (bucket != state->latency_bucket) {
-		latency_bucket_finish(disk, state, offset);
-		latency_bucket_prepare(disk, state, offset);
-	}
-}
-
 static void latency_bucket_add(disk_t *disk, uint64_t latency, struct scan_state *state)
 {
 	latency_t *l = &disk->latency_graph[state->latency_bucket];
@@ -192,7 +192,7 @@ static void latency_bucket_add(disk_t *disk, uint64_t latency, struct scan_state
 	state->latency[state->latency_count++] = latency;
 }
 
-static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size, uint64_t latency_stride, struct scan_state *state)
+static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size, struct scan_state *state)
 {
 	ssize_t ret;
 	struct timespec t_start;
@@ -207,9 +207,13 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		t_end.tv_nsec - t_start.tv_nsec;
 
 	if (ret != data_size) {
+		int s_errno = errno;
 		ERROR("Error when reading at offset %" PRIu64 " size %d read %d: %m", offset, data_size, ret);
 		report_scan_error(disk, offset, data_size, t);
 		disk->num_errors++;
+
+		if (s_errno != EIO)
+			abort();
 	}
 	else {
 		report_scan_success(disk, offset, data_size, t);
@@ -247,18 +251,88 @@ static uint64_t calc_latency_stride(disk_t *disk)
 	return stride_size + 1;
 }
 
-int disk_scan(disk_t *disk)
+static uint32_t *calc_scan_order_seq(disk_t *disk, uint64_t stride_size, int read_size_sectors)
+{
+	uint64_t num_reads = stride_size / read_size_sectors + 2;
+	uint32_t *order = malloc(sizeof(uint32_t) * num_reads);
+
+	uint64_t i;
+	for (i = 0; i < num_reads; i++)
+		order[i] = i * read_size_sectors * disk->sector_size;
+	order[i] = UINT32_MAX;
+
+	return order;
+}
+
+static uint32_t *calc_scan_order_random(disk_t *disk, uint64_t stride_size, int read_size_sectors)
+{
+	uint64_t num_reads = stride_size / read_size_sectors + 2;
+	uint32_t *order = malloc(sizeof(uint32_t) * num_reads);
+
+	// Fill sequential data
+	uint64_t i;
+	for (i = 0; i < num_reads - 1; i++)
+		order[i] = i * read_size_sectors * disk->sector_size;
+	order[i] = UINT32_MAX;
+
+	// Shuffle it
+	srand(time(NULL));
+	for (i = 0; i < num_reads - 1; i++) {
+		int j = rand() % num_reads;
+		if (i == j)
+			continue;
+
+		uint32_t tmp = order[i];
+		order[i] = order[j];
+		order[j] = tmp;
+	}
+
+	return order;
+}
+
+static uint32_t *calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t stride_size, int read_size)
+{
+	int read_size_sectors = read_size / disk->sector_size;
+
+	if (mode == SCAN_MODE_SEQ)
+		return calc_scan_order_seq(disk, stride_size, read_size_sectors);
+	else if (mode == SCAN_MODE_RANDOM)
+		return calc_scan_order_random(disk, stride_size, read_size_sectors);
+	else
+		return NULL;
+}
+
+static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
+{
+	unsigned i;
+
+	for (i = 0; disk->run && scan_order[i] != UINT32_MAX; i++) {
+		uint64_t offset = base_offset + scan_order[i];
+		VVVERBOSE("Scanning at offset %llu index %u", offset, i);
+		uint64_t remainder = base_offset + state->latency_stride * disk->sector_size - offset;
+		if (remainder < data_size) {
+			data_size = remainder;
+			VERBOSE("Last part scanning size %d", data_size);
+		}
+		disk_scan_part(disk, offset, state->data, data_size, state);
+	}
+}
+
+int disk_scan(disk_t *disk, enum scan_mode mode)
 {
 	INFO("Scanning disk %s", disk->path);
 	disk->run = 1;
 	int data_size = decide_buffer_size(disk);
 	void *data = allocate_buffer(data_size);
+	uint32_t *scan_order = NULL;
+	int result = 0;
 
 	VVVERBOSE("Using buffer of size %d", data_size);
 
 	if (data == NULL) {
 		ERROR("Failed to allocate data buffer: %m");
-		return 1;
+		result = 1;
+		goto Exit;
 	}
 
 	struct scan_state state;
@@ -271,19 +345,21 @@ int disk_scan(disk_t *disk)
 	state.latency_stride = latency_stride;
 	state.latency_count = 0;
 	state.latency = malloc(sizeof(uint32_t) * latency_stride);
+	state.data = data;
 
-	latency_bucket_prepare(disk, &state, 0);
-	for (offset = 0; disk->run && offset < disk_size_bytes; offset += data_size) {
-		VVVERBOSE("Scanning at offset %llu out of %llu (%.2f%%)", offset, disk_size_bytes, (float)offset*100.0/(float)disk_size_bytes);
-		latency_bucket_step_if_needed(disk, &state, offset);
-		uint64_t remainder = disk_size_bytes - offset;
-		if (remainder < data_size) {
-			data_size = remainder;
-			VERBOSE("Last part scanning size %d", data_size);
-		}
-		disk_scan_part(disk, offset, data, data_size, latency_stride, &state);
+	scan_order = calc_scan_order(disk, mode, latency_stride, data_size);
+	if (!scan_order) {
+		result = 1;
+		ERROR("Failed to generate scan order");
+		goto Exit;
 	}
-	latency_bucket_finish(disk, &state, offset);
+
+	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
+		VVERBOSE("Scanning stride starting at %llu", offset);
+		latency_bucket_prepare(disk, &state, offset);
+		disk_scan_latency_stride(disk, &state, offset, data_size, scan_order);
+		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
+	}
 	free(state.latency);
 
 	if (!disk->run) {
@@ -291,7 +367,9 @@ int disk_scan(disk_t *disk)
 	}
 	report_scan_done(disk);
 
+Exit:
+	free(scan_order);
 	free_buffer(data, data_size);
 	disk->run = 0;
-	return 0;
+	return result;
 }

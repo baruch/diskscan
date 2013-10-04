@@ -66,6 +66,11 @@ were 120 chunks being read. Current these chunks are 1MB in size.
   attempted on an unmounted block device and never on an inuse filesystem or
   corruption is likely.
 
+`-s <mode>`, `--scan <mode>`
+  Scan mode can be either `seq` or `random`, random reduces the chance that the
+  disk will be able spend time to recover data before we try to access a sector
+  but the seeks add noise to the latency measurement. Sequential test is the
+  default and random test is still experimental with regard to its usefulness.
 
 # SEE ALSO
 

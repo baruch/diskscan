@@ -35,6 +35,7 @@ struct options_t {
 	char *disk_path;
 	int verbose;
 	int fix;
+	enum scan_mode mode;
 };
 
 void print_header(void)
@@ -49,8 +50,9 @@ int usage(void) {
 	printf("diskscan version %s\n\n", TAG);
 	printf("diskscan [options] /dev/sd\n");
 	printf("Options:\n");
-	printf("    -v, --verbose   - Increase verbosity, multiple uses for higher levels\n");
-	printf("    -f, --fix       - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
+	printf("    -v, --verbose     - Increase verbosity, multiple uses for higher levels\n");
+	printf("    -f, --fix         - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
+	printf("    -s, --scan <mode> - Scan in order (seq, random)\n");
 	printf("\n");
 	return 1;
 }
@@ -146,12 +148,13 @@ int parse_args(int argc, char **argv, options_t *opts)
 	while (1) {
 		int option_index = 0;
 		static struct option long_options[] = {
-			{"verbose", no_argument, 0,  'v'},
-			{"fix",     no_argument, 0,  'f'},
-			{0,         0,           0,  0}
+			{"verbose", no_argument,       0,  'v'},
+			{"fix",     no_argument,       0,  'f'},
+			{"scan",    required_argument, 0,  's'},
+			{0,         0,                 0,  0}
 		};
 
-		c = getopt_long(argc, argv, "vf", long_options, &option_index);
+		c = getopt_long(argc, argv, "vfs:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -164,6 +167,13 @@ int parse_args(int argc, char **argv, options_t *opts)
 				break;
 			case 'f':
 				opts->fix = 1;
+				break;
+			case 's':
+				opts->mode = str_to_scan_mode(optarg);
+				if (opts->mode == SCAN_MODE_UNKNOWN) {
+					opts->mode = SCAN_MODE_SEQ;
+					printf("Unknown scan mode %s given, using sequential\n", optarg);
+				}
 				break;
 
 			default:
@@ -229,7 +239,7 @@ int diskscan_cli(int argc, char **argv)
 	if (print_disk_info(&disk))
 		return 1;
 
-	if (disk_scan(&disk))
+	if (disk_scan(&disk, opts.mode))
 		return 1;
 
 	disk_close(&disk);
