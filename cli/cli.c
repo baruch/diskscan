@@ -79,7 +79,11 @@ static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
 			max_val = latency_graph[i].latency_max_msec;
 	}
 
-	const uint32_t height_interval = (max_val - min_val + 1) / (height - 3);
+	uint32_t height_interval = (max_val - min_val + 1) / (height - 3);
+	if (height_interval == 0)
+		height_interval = 1;
+	else if (height_interval > 10000)
+		height_interval = 10000;
 
 	int j;
 	for (j = height; j > 0; j--) {
