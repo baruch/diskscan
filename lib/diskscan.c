@@ -360,7 +360,6 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 		disk_scan_latency_stride(disk, &state, offset, data_size, scan_order);
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
 	}
-	free(state.latency);
 
 	if (!disk->run) {
 		INFO("Disk scan interrupted");
@@ -370,6 +369,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 Exit:
 	free(scan_order);
 	free_buffer(data, data_size);
+	free(state.latency);
 	disk->run = 0;
 	return result;
 }
