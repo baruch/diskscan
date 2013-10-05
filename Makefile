@@ -4,6 +4,9 @@ all:
 static:
 	LDFLAGS=-static ./do all
 
+scan:
+	scan-build ./do all
+
 clean:
 	./do clean
 
