@@ -1,6 +1,9 @@
 all:
 	./do all
 
+static:
+	LDFLAGS=-static ./do all
+
 clean:
 	./do clean
 
