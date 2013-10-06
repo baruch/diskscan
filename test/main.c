@@ -62,7 +62,7 @@ bool read_response(int fd, unsigned char **sensep, unsigned *sense_len)
 	sg_io_hdr_t hdr;
 	int ret = read(fd, &hdr, sizeof(hdr));
 	if (ret != sizeof(hdr)) {
-		fprintf(stderr, "Error reading scsi response, ret=%d, expected=%d, %m\n", ret, sizeof(hdr));
+		fprintf(stderr, "Error reading scsi response, ret=%d, expected=%d, %m\n", ret, (int)sizeof(hdr));
 		return false;
 	}
 

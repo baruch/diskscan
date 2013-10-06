@@ -19,6 +19,7 @@
 #include "main.h"
 #include <stdio.h>
 #include <scsi/sg.h>
+#include <inttypes.h>
 
 void do_command(int fd)
 {
@@ -44,7 +45,7 @@ void do_command(int fd)
 	if (sense && ata_status_from_scsi_sense(sense, sense_len, &status)) {
 		printf("extend: %d\n", status.extend);
 		printf("error: %02x\n", status.error);
-		printf("lba: %08llx\n", status.lba);
+		printf("lba: %08"PRIx64"\n", status.lba);
 		printf("device: %02x\n", status.device);
 		printf("status: %02x\n", status.status);
 		printf("count: %02x\n", status.sector_count);

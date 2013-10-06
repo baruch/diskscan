@@ -1,6 +1,7 @@
 #include "sense_dump.h"
 #include "scsicmd.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 void response_dump(unsigned char *buf, int buf_len)
 {
@@ -31,9 +32,9 @@ static void sense_dump_sense_info(sense_info_t *si)
         print_code("Time", si->is_current, "Current", "Deferred");
         printf("Code: %x/%02x/%02x\n", si->sense_key, si->asc, si->ascq);
         if (si->information_valid)
-                printf("Information: %llx\n", si->information);
+                printf("Information: %"PRIx64"\n", si->information);
         if (si->cmd_specific_valid)
-                printf("Command specific: %llx\n", si->cmd_specific);
+                printf("Command specific: %"PRIx64"\n", si->cmd_specific);
         if (si->sense_key_specific_valid) {
 
                 switch (si->sense_key) {
@@ -75,7 +76,7 @@ static void sense_dump_sense_info(sense_info_t *si)
                 printf("    Device: %d\n", si->ata_status.device);
                 printf("    Status: %d\n", si->ata_status.status);
                 printf("    Sector Count: %u\n", si->ata_status.sector_count);
-                printf("    LBA: %llu / %llx\n", si->ata_status.lba, si->ata_status.lba);
+                printf("    LBA: %"PRIu64" / %"PRIx64"\n", si->ata_status.lba, si->ata_status.lba);
         }
 
         print_bool("Incorrect Length Indicator", si->incorrect_len_indicator);
