@@ -1,1 +1,1 @@
-rm -f libscsicmd.a src/*.o tags
+rm -f libscsicmd.a */*.o */.*.d tags $(redo-targets)
