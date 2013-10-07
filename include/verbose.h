@@ -3,7 +3,7 @@
 
 extern int verbose;
 
-void verbose_out(const char *fmt, ...);
+void verbose_out(const char *fmt, ...) __attribute__ ((format (gnu_printf, 1, 2)));;
 
 #define VERBOSE(...) if (verbose > 0) verbose_out("V: " __VA_ARGS__)
 #define VVERBOSE(...) if (verbose > 1) verbose_out("V: " __VA_ARGS__)

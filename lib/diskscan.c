@@ -22,6 +22,7 @@
 #include "verbose.h"
 #include "arch.h"
 #include "median.h"
+#include "compiler.h"
 
 #include <memory.h>
 #include <stdlib.h>
@@ -86,7 +87,7 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 	}
 
 	if (disk->sector_size == 0 || disk->sector_size % 512 != 0) {
-		ERROR("Invalid sector size %d", disk->sector_size);
+		ERROR("Invalid sector size %" PRIu64, disk->sector_size);
 		goto Error;
 	}
 
@@ -107,7 +108,7 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 		goto Error;
 	}
 
-	INFO("Opened disk %s sector size %u num bytes %llu", path, disk->sector_size, disk->num_bytes);
+	INFO("Opened disk %s sector size %"PRIu64" num bytes %"PRIu64, path, disk->sector_size, disk->num_bytes);
 	return 0;
 
 Error:
@@ -132,7 +133,7 @@ void disk_scan_stop(disk_t *disk)
 	disk->run = 0;
 }
 
-static int decide_buffer_size(disk_t *disk)
+static int decide_buffer_size(disk_t *UNUSED(disk))
 {
 	// TODO: Should use 64KB first and switch to sector size on errors, this will get the best speed overall and enough granularity.
 	return 64*1024;
@@ -208,7 +209,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 
 	if (ret != data_size) {
 		int s_errno = errno;
-		ERROR("Error when reading at offset %" PRIu64 " size %d read %d: %m", offset, data_size, ret);
+		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd: %m", offset, data_size, ret);
 		report_scan_error(disk, offset, data_size, t);
 		disk->num_errors++;
 
@@ -220,7 +221,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	}
 
 	uint64_t t_msec = t / 1000000;
-	int hist_idx = 0;
+	unsigned hist_idx = 0;
 	while (t_msec >= histogram_time[hist_idx] && hist_idx < ARRAY_SIZE(disk->histogram) - 1) {
 		hist_idx++;
 	}
@@ -229,11 +230,11 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	latency_bucket_add(disk, t_msec, state);
 
 	if (t_msec > 1000) {
-		VERBOSE("Scanning at offset %" PRIu64 " took %llu msec", offset, t_msec);
+		VERBOSE("Scanning at offset %" PRIu64 " took %"PRIu64" msec", offset, t_msec);
 	}
 
 	if (t_msec > 3000) {
-		INFO("Fixing region by rewriting, offset=%d size=%d", offset, data_size);
+		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
 		ret = pwrite(disk->fd, data, data_size, offset);
 		if (ret != 0) {
 			ERROR("Error while attempting to rewrite the data! errno=%d: %m", errno);
@@ -278,7 +279,7 @@ static uint32_t *calc_scan_order_random(disk_t *disk, uint64_t stride_size, int 
 	// Shuffle it
 	srand(time(NULL));
 	for (i = 0; i < num_reads - 1; i++) {
-		int j = rand() % num_reads;
+		uint64_t j = rand() % num_reads;
 		if (i == j)
 			continue;
 
@@ -308,11 +309,11 @@ static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 
 	for (i = 0; disk->run && scan_order[i] != UINT32_MAX; i++) {
 		uint64_t offset = base_offset + scan_order[i];
-		VVVERBOSE("Scanning at offset %llu index %u", offset, i);
+		VVVERBOSE("Scanning at offset %"PRIu64" index %u", offset, i);
 		uint64_t remainder = base_offset + state->latency_stride * disk->sector_size - offset;
 		if (remainder < data_size) {
 			data_size = remainder;
-			VERBOSE("Last part scanning size %d", data_size);
+			VERBOSE("Last part scanning size %"PRIu64, data_size);
 		}
 		disk_scan_part(disk, offset, state->data, data_size, state);
 	}
@@ -339,7 +340,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 	uint64_t offset;
 	const uint64_t disk_size_bytes = disk->num_bytes;
 	const uint64_t latency_stride = calc_latency_stride(disk);
-	VVERBOSE("latency stride is %llu", latency_stride);
+	VVERBOSE("latency stride is %"PRIu64, latency_stride);
 
 	state.latency_bucket = 0;
 	state.latency_stride = latency_stride;
@@ -355,7 +356,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 	}
 
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
-		VVERBOSE("Scanning stride starting at %llu", offset);
+		VVERBOSE("Scanning stride starting at %"PRIu64, offset);
 		latency_bucket_prepare(disk, &state, offset);
 		disk_scan_latency_stride(disk, &state, offset, data_size, scan_order);
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);

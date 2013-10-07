@@ -1,8 +1,8 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-extern char *COMMIT;
-extern char *TAG;
-extern char *DATE;
+extern const char *COMMIT;
+extern const char *TAG;
+extern const char *DATE;
 
 #endif

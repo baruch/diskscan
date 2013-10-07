@@ -21,6 +21,8 @@
 #include "verbose.h"
 #include "diskscan.h"
 #include "version.h"
+#include "compiler.h"
+#include "cli.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -38,7 +40,7 @@ struct options_t {
 	enum scan_mode mode;
 };
 
-void print_header(void)
+static void print_header(void)
 {
 	printf("diskscan version %s\n\n", TAG);
 	VERBOSE("Verbosity set");
@@ -46,7 +48,7 @@ void print_header(void)
 	VVVERBOSE("Very high verbosity set");
 }
 
-int usage(void) {
+static int usage(void) {
 	printf("diskscan version %s\n\n", TAG);
 	printf("diskscan [options] /dev/sd\n");
 	printf("Options:\n");
@@ -58,11 +60,11 @@ int usage(void) {
 }
 
 
-void report_scan_success(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time)
+void report_scan_success(disk_t *UNUSED(disk), uint64_t UNUSED(offset_bytes), uint64_t UNUSED(data_size), uint64_t UNUSED(time))
 {
 }
 
-void report_scan_error(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time)
+void report_scan_error(disk_t *UNUSED(disk), uint64_t UNUSED(offset_bytes), uint64_t UNUSED(data_size), uint64_t UNUSED(time))
 {
 }
 
@@ -85,7 +87,7 @@ static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
 	else if (height_interval > 10000)
 		height_interval = 10000;
 
-	int j;
+	uint32_t j;
 	for (j = height; j > 0; j--) {
 		if (j % 5 == 0)
 			printf("%5u | ", j * height_interval);
@@ -130,7 +132,7 @@ static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
 
 void report_scan_done(disk_t *disk)
 {
-	int hist_idx;
+	unsigned hist_idx;
 	
 	printf("Access time histogram:\n");
 	for (hist_idx = 0; hist_idx < ARRAY_SIZE(disk->histogram); hist_idx++)
@@ -144,7 +146,7 @@ void report_scan_done(disk_t *disk)
 	print_latency(disk->latency_graph, disk->latency_graph_len);
 }
 
-int parse_args(int argc, char **argv, options_t *opts)
+static int parse_args(int argc, char **argv, options_t *opts)
 {
 	int c;
 	int unknown = 0;
@@ -204,12 +206,12 @@ int parse_args(int argc, char **argv, options_t *opts)
 	return 0;
 }
 
-int print_disk_info(disk_t *disk)
+static int print_disk_info(disk_t *UNUSED(disk))
 {
 	return 0;
 }
 
-static void diskscan_cli_signal(int signal)
+static void diskscan_cli_signal(int UNUSED(signal))
 {
 	disk_scan_stop(&disk);
 }
