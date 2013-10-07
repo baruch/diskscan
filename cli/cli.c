@@ -229,7 +229,8 @@ static void setup_signals(void)
 
 int diskscan_cli(int argc, char **argv)
 {
-	options_t opts = {0};
+	options_t opts;
+	memset(&opts, 0, sizeof(opts));
 
 	if (parse_args(argc, argv, &opts))
 		return 1;
