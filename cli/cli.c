@@ -207,10 +207,12 @@ static int parse_args(int argc, char **argv, options_t *opts)
 	return 0;
 }
 
+/*
 static int print_disk_info(disk_t *UNUSED(disk))
 {
 	return 0;
 }
+*/
 
 static void diskscan_cli_signal(int UNUSED(signal))
 {
@@ -244,8 +246,10 @@ int diskscan_cli(int argc, char **argv)
 	if (disk_open(&disk, opts.disk_path, opts.fix, 70))
 		return 1;
 
+	/*
 	if (print_disk_info(&disk))
 		return 1;
+	*/
 
 	if (disk_scan(&disk, opts.mode))
 		return 1;
