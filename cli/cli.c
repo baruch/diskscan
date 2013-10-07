@@ -234,6 +234,7 @@ int diskscan_cli(int argc, char **argv)
 {
 	options_t opts;
 	memset(&opts, 0, sizeof(opts));
+	opts.mode = SCAN_MODE_SEQ;
 
 	if (parse_args(argc, argv, &opts))
 		return 1;
