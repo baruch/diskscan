@@ -326,6 +326,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 	void *data = allocate_buffer(data_size);
 	uint32_t *scan_order = NULL;
 	int result = 0;
+	struct scan_state state = {.latency = NULL};
 
 	VVVERBOSE("Using buffer of size %d", data_size);
 
@@ -335,7 +336,6 @@ int disk_scan(disk_t *disk, enum scan_mode mode)
 		goto Exit;
 	}
 
-	struct scan_state state;
 	uint64_t offset;
 	const uint64_t disk_size_bytes = disk->num_bytes;
 	const uint64_t latency_stride = calc_latency_stride(disk);
