@@ -29,6 +29,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <memory.h>
 
 static disk_t disk;
 
