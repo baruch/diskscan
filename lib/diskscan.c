@@ -199,6 +199,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	struct timespec t_start;
 	struct timespec t_end;
 	uint64_t t;
+	int error = 0;
 
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
 	ret = pread(disk->fd, data, data_size, offset);
@@ -212,9 +213,11 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd: %m", offset, data_size, ret);
 		report_scan_error(disk, offset, data_size, t);
 		disk->num_errors++;
+		error = 1;
 
-		if (s_errno != EIO)
+		if (s_errno != EIO && s_errno != 0)
 			abort();
+		// TODO: What to do when no everything was read but errno is zero?
 	}
 	else {
 		report_scan_success(disk, offset, data_size, t);
@@ -233,11 +236,11 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		VERBOSE("Scanning at offset %" PRIu64 " took %"PRIu64" msec", offset, t_msec);
 	}
 
-	if (t_msec > 3000) {
+	if (t_msec > 3000 || error) {
 		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
 		ret = pwrite(disk->fd, data, data_size, offset);
-		if (ret != 0) {
-			ERROR("Error while attempting to rewrite the data! errno=%d: %m", errno);
+		if (ret != data_size) {
+			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %m", ret, errno);
 		}
 	}
 }
