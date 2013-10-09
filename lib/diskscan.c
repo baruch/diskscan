@@ -324,14 +324,18 @@ static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 
 int disk_scan(disk_t *disk, enum scan_mode mode)
 {
-	INFO("Scanning disk %s", disk->path);
 	disk->run = 1;
 	int data_size = decide_buffer_size(disk);
 	void *data = allocate_buffer(data_size);
 	uint32_t *scan_order = NULL;
 	int result = 0;
 	struct scan_state state = {.latency = NULL};
+	struct timespec ts_start;
+	struct timespec ts_end;
 
+	clock_gettime(CLOCK_MONOTONIC, &ts_start);
+
+	INFO("Scanning disk %s", disk->path);
 	VVVERBOSE("Using buffer of size %d", data_size);
 
 	if (data == NULL) {
@@ -375,5 +379,7 @@ Exit:
 	free_buffer(data, data_size);
 	free(state.latency);
 	disk->run = 0;
+	clock_gettime(CLOCK_MONOTONIC, &ts_end);
+	INFO("Scan took %d second", (int)(ts_end.tv_sec - ts_start.tv_sec));
 	return result;
 }
