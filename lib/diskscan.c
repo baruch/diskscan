@@ -133,12 +133,6 @@ void disk_scan_stop(disk_t *disk)
 	disk->run = 0;
 }
 
-static int decide_buffer_size(disk_t *UNUSED(disk))
-{
-	// TODO: Should use 64KB first and switch to sector size on errors, this will get the best speed overall and enough granularity.
-	return 64*1024;
-}
-
 static void *allocate_buffer(int buf_size)
 {
 	void *buf = mmap(NULL, buf_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
@@ -322,10 +316,9 @@ static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 	}
 }
 
-int disk_scan(disk_t *disk, enum scan_mode mode)
+int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 {
 	disk->run = 1;
-	int data_size = decide_buffer_size(disk);
 	void *data = allocate_buffer(data_size);
 	uint32_t *scan_order = NULL;
 	int result = 0;

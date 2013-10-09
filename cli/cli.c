@@ -30,6 +30,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <memory.h>
+#include <stdlib.h>
+#include <errno.h>
 
 static disk_t disk;
 
@@ -39,6 +41,7 @@ struct options_t {
 	int verbose;
 	int fix;
 	enum scan_mode mode;
+	unsigned scan_size;
 };
 
 static void print_header(void)
@@ -56,6 +59,7 @@ static int usage(void) {
 	printf("    -v, --verbose     - Increase verbosity, multiple uses for higher levels\n");
 	printf("    -f, --fix         - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
 	printf("    -s, --scan <mode> - Scan in order (seq, random)\n");
+	printf("    -e, --size <size> - Scan size (default to 64K, must be multiple of 512)\n");
 	printf("\n");
 	return 1;
 }
@@ -147,10 +151,26 @@ void report_scan_done(disk_t *disk)
 	print_latency(disk->latency_graph, disk->latency_graph_len);
 }
 
+static unsigned str_to_scan_size(const char *str)
+{
+	char *endptr;
+	long int val;
+
+	errno = 0;
+	val = strtol(str, &endptr, 0);
+	if (errno != 0 || val <= 0 || val % 512 != 0) {
+		return 0;
+	}
+
+	return (unsigned)val;
+}
+
 static int parse_args(int argc, char **argv, options_t *opts)
 {
 	int c;
 	int unknown = 0;
+
+	opts->scan_size = 64*1024;
 
 	while (1) {
 		int option_index = 0;
@@ -158,10 +178,11 @@ static int parse_args(int argc, char **argv, options_t *opts)
 			{"verbose", no_argument,       0,  'v'},
 			{"fix",     no_argument,       0,  'f'},
 			{"scan",    required_argument, 0,  's'},
+			{"size",    required_argument, 0,  'e'},
 			{0,         0,                 0,  0}
 		};
 
-		c = getopt_long(argc, argv, "vfs:", long_options, &option_index);
+		c = getopt_long(argc, argv, "vfs:e:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -182,6 +203,9 @@ static int parse_args(int argc, char **argv, options_t *opts)
 					printf("Unknown scan mode %s given, using sequential\n", optarg);
 				}
 				break;
+			case 'e':
+				opts->scan_size = str_to_scan_size(optarg);
+				break;
 
 			default:
 				unknown = 1;
@@ -199,7 +223,12 @@ static int parse_args(int argc, char **argv, options_t *opts)
 	}
 
 	if (unknown) {
-		printf("Unknown option provided");
+		printf("Unknown option provided\n");
+		return usage();
+	}
+
+	if (opts->scan_size == 0 || opts->scan_size % 512 != 0) {
+		printf("Scan size is invalid, must be a positive multiple of 512\n");
 		return usage();
 	}
 
@@ -252,7 +281,7 @@ int diskscan_cli(int argc, char **argv)
 		return 1;
 	*/
 
-	if (disk_scan(&disk, opts.mode))
+	if (disk_scan(&disk, opts.mode, opts.scan_size))
 		return 1;
 
 	disk_close(&disk);
