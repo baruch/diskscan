@@ -1,0 +1,164 @@
+ata_identify:
+    not_ata_device:
+        bit: [0, 15]
+    response_incomplete:
+        bit: [0, 2]
+
+    serial_number:
+        string: [10, 19]
+
+    fw_rev:
+        string: [23, 26]
+
+    model:
+        string: [27, 46]
+
+#    max_num_sectors_transfer_per_drq_multiple:
+#        byte: [40, 1]
+
+    trusted_computing_supported:
+        bit: [48, 0]
+
+    standby_timer_values_settable:
+        bit: [49, 13]
+    iordy_supported:
+        bit: [49, 11]
+    iordy_disable_supported:
+        bit: [49, 10]
+    dma_supported:
+        bit: [49, 8]
+#    alignment_error_reporting_field:
+#        bits: [49, 0, 1]
+
+#    free_fall_sensitivity:
+#        bits: [53, 8, 15]
+    fields_valid_word_88:
+        bit: [53, 2]
+    fields_valid_words_64_70:
+        bit: [53, 1]
+
+    block_erase_supported:
+        bit: [59, 15]
+    overwrite_supported:
+        bit: [59, 14]
+    crypto_scramble_supported:
+        bit: [59, 13]
+    sanitize_supported:
+        bit: [59, 12]
+
+    total_addressable_sectors_28bit:
+        longword: 60
+
+    cfast_supported:
+        bit: [69, 15]
+    drat_supported:
+        bit: [69, 14]
+    lps_misalignment_reporting_supported:
+        bit: [69, 13]
+    read_buffer_dma_supported:
+        bit: [69, 11]
+    write_buffer_dma_supported:
+        bit: [69, 10]
+    set_max_set_password_dma_and_set_max_unlock_dma_supported:
+        bit: [69, 9]
+    download_microcode_dma_supported:
+        bit: [69, 8]
+    address_28bit_supported:
+        bit: [69, 6]
+    rzat_supported:
+        bit: [69, 5]
+    encrypt_all_supported:
+        bit: [69, 4]
+    extended_number_of_user_addressable_sectors:
+        bit: [69, 3]
+    non_volatile_cache:
+        bit: [69, 2]
+
+#    queue_depth:
+#        bits: [75, 0, 4]
+
+    sata_automatic_partial_to_slumber_transitions_enabled:
+        bit: [79, 7]
+    sata_software_settings_preservation_enabled:
+        bit: [79, 6]
+    sata_hardware_feature_control_enabled:
+        bit: [79, 5]
+    sata_in_order_data_delivery_enabled:
+        bit: [79, 4]
+    sata_device_initiated_power_management_enabled:
+        bit: [79, 3]
+    sata_dma_setup_auto_activation_enabled:
+        bit: [79, 2]
+    sata_non_zero_buffer_offsets_enabled:
+        bit: [79, 1]
+
+    major_version_acs_2:
+        bit: [80, 9]
+    major_version_ata_8_acs:
+        bit: [80, 8]
+    major_version_ata_atapi_7:
+        bit: [80, 7]
+    major_version_ata_atapi_6:
+        bit: [80, 6]
+    major_version_ata_atapi_5:
+        bit: [80, 5]
+
+#    minor_version:
+#        word: 81
+
+    nop_supported:
+        bit: [82, 14]
+    read_buffer_supported:
+        bit: [82, 13]
+    write_buffer_supported:
+        bit: [82, 12]
+    read_look_ahead_supported:
+        bit: [82, 6]
+    volatile_write_cache_supported:
+        bit: [82, 5]
+    packet_feature_set_supported:
+        bit: [82, 4]
+    mandatory_power_management_supported:
+        bit: [82, 3]
+    security_feature_set_supported:
+        bit: [82, 1]
+    smart_supported:
+        bit: [82, 0]
+
+    address_48bit_supported:
+        bit: [83, 10]
+
+    smart_self_test_supported:
+        bit: [84, 1]
+
+    smart_error_logging_supported:
+        bit: [84, 0]
+
+    smart_enabled:
+        bit: [85, 0]
+
+    sense_data_supported:
+        bit: [119, 6]
+
+    write_uncorrectable_supported:
+        bit: [119, 2]
+
+    sense_data_enabled:
+        bit: [120, 6]
+
+    write_uncorrectable_enabled:
+        bit: [120, 2]
+
+    
+    sct_data_tables_supported:
+        bit: [206, 5]
+    sct_feature_control_supported:
+        bit: [206, 4]
+    sct_error_recovery_control_supported:
+        bit: [206, 3]
+    sct_write_same_supported:
+        bit: [206, 2]
+    sct_command_transport_supported:
+        bit: [206, 0]
+
+# vim:set et ts=4 sw=4:
