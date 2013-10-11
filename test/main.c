@@ -54,7 +54,7 @@ bool submit_cmd(int fd, unsigned char *cdb, unsigned cdb_len, unsigned char *buf
 	return ret == sizeof(hdr);
 }
 
-bool read_response(int fd, unsigned char **sensep, unsigned *sense_len)
+bool read_response_buf(int fd, unsigned char **sensep, unsigned *sense_len, unsigned *buf_read)
 {
 	*sensep = NULL;
 	*sense_len = 0;
@@ -80,6 +80,8 @@ bool read_response(int fd, unsigned char **sensep, unsigned *sense_len)
 		printf("sense data:\n");
                 sense_dump(sense, hdr.sb_len_wr);
 	}
+	if (buf_read)
+		*buf_read = hdr.dxfer_len - hdr.resid;
 	return true;
 }
 

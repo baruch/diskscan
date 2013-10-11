@@ -144,4 +144,16 @@ static inline int cdb_inquiry_simple(unsigned char *cdb, uint16_t alloc_len) { r
 bool parse_inquiry(char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor,
                    scsi_model_t model, scsi_fw_revision_t rev, scsi_serial_t serial);
 
+/* read capacity */
+int cdb_read_capacity_10(unsigned char *cdb);
+bool parse_read_capacity_10(unsigned char *buf, unsigned buf_len, uint32_t *max_lba, uint32_t *block_size);
+int cdb_read_capacity_16(unsigned char *cdb, uint32_t alloc_len);
+bool parse_read_capacity_16(unsigned char *buf, unsigned buf_len, uint64_t *max_lba, uint32_t *block_size, bool *prot_enable,
+		unsigned *p_type, unsigned *p_i_exponent, unsigned *logical_blocks_per_physical_block_exponent,
+		bool *thin_provisioning_enabled, bool *thin_provisioning_zero, unsigned *lowest_aligned_lba);
+
+/* read & write */
+int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
+int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
+
 #endif
