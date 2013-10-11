@@ -29,6 +29,8 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	int ret;
 
 	memset(&hdr, 0, sizeof(hdr));
+	*sense_read = 0;
+	*buf_read = 0;
 
 	hdr.interface_id = 'S';
 	hdr.dxfer_direction = SG_DXFER_FROM_DEV;
@@ -86,6 +88,9 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	if (!parse_read_capacity_10(buf, buf_read, &size_bytes_32, &block_size))
 		return -1;
 
+	if (sense_read > 0) // TODO: Parse to see if real error or something we can ignore
+		return -1;
+
 	if (size_bytes_32 < 0xFFFFFFFF) {
 		*size_bytes = size_bytes_32;
 		*sector_size = block_size;
@@ -96,6 +101,9 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	cdb_len = cdb_read_capacity_16(cdb, sizeof(buf));
 	ret = sg_ioctl(fd, cdb, cdb_len, buf, sizeof(buf), sense, sizeof(sense), &buf_read, &sense_read);
 	if (ret < 0)
+		return -1;
+
+	if (sense_read > 0) // TODO: Parse to see if real error or something we can ignore
 		return -1;
 
 	if (!parse_read_capacity_16_simple(buf, buf_read, size_bytes, &block_size))
