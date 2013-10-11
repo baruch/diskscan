@@ -255,7 +255,7 @@ static uint32_t *calc_scan_order_seq(disk_t *disk, uint64_t stride_size, int rea
 	uint32_t *order = malloc(sizeof(uint32_t) * num_reads);
 
 	uint64_t i;
-	for (i = 0; i < num_reads; i++)
+	for (i = 0; i < num_reads-1; i++)
 		order[i] = i * read_size_sectors * disk->sector_size;
 	order[i] = UINT32_MAX;
 
