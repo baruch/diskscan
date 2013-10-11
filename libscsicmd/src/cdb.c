@@ -63,3 +63,45 @@ int cdb_inquiry(unsigned char *cdb, bool evpd, char page_code, uint16_t alloc_le
 
 	return INQUIRY_LEN;
 }
+
+int cdb_read_capacity_10(unsigned char *cdb)
+{
+	const int LEN = 10;
+	cdb[0] = 0x25;
+	memset(cdb+1, 0, LEN-1);
+	return LEN;
+}
+
+int cdb_read_capacity_16(unsigned char *cdb, uint32_t alloc_len)
+{
+	const int LEN = 16;
+	cdb[0] = 0x9E;
+	cdb[1] = 0x10;
+	memset(cdb+2, 0, LEN-2);
+	set_uint32(cdb, 10, alloc_len);
+	return LEN;
+}
+
+int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks)
+{
+	const int LEN = 10;
+	cdb[0] = 0x28;
+	cdb[1] = fua << 3;
+	set_uint32(cdb, 2, lba);
+	cdb[6] = 0;
+	set_uint16(cdb, 7, transfer_length_blocks);
+	cdb[9] = 0;
+	return LEN;
+}
+
+int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks)
+{
+	const int LEN = 10;
+	cdb[0] = 0x2A;
+	cdb[1] = fua << 3;
+	set_uint32(cdb, 2, lba);
+	cdb[6] = 0;
+	set_uint16(cdb, 7, transfer_length_blocks);
+	cdb[9] = 0;
+	return LEN;
+}
