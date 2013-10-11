@@ -151,6 +151,10 @@ int cdb_read_capacity_16(unsigned char *cdb, uint32_t alloc_len);
 bool parse_read_capacity_16(unsigned char *buf, unsigned buf_len, uint64_t *max_lba, uint32_t *block_size, bool *prot_enable,
 		unsigned *p_type, unsigned *p_i_exponent, unsigned *logical_blocks_per_physical_block_exponent,
 		bool *thin_provisioning_enabled, bool *thin_provisioning_zero, unsigned *lowest_aligned_lba);
+static inline bool parse_read_capacity_16_simple(unsigned char *buf, unsigned buf_len, uint64_t *max_lba, uint32_t *block_size)
+{
+	return parse_read_capacity_16(buf, buf_len, max_lba, block_size, 0, 0, 0, 0, 0, 0, 0);
+}
 
 /* read & write */
 int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
