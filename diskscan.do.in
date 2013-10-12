@@ -1,6 +1,6 @@
 exec >&2
 OBJS="diskscan.o"
-LIBS="cli/cli.a lib/diskscan.a arch/arch.a libscsicmd/libscsicmd.a"
+LIBS="cli/cli.a lib/diskscan.a arch/arch.a @LIBSCSICMD@"
 redo-ifchange config
 redo-ifchange $OBJS $LIBS
 CC=${CC:-gcc}

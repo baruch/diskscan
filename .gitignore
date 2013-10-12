@@ -6,6 +6,7 @@
 .do_built.dir
 .redo
 diskscan
+diskscan.do
 arch/arch.c
 arch/arch.id
 configure
