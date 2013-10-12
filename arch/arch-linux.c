@@ -93,7 +93,7 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 		return -1;
 
 	if (size_bytes_32 < 0xFFFFFFFF) {
-		*size_bytes = size_bytes_32;
+		*size_bytes = (uint64_t)size_bytes_32 * 512;
 		*sector_size = block_size;
 		return 0;
 	}
@@ -110,6 +110,7 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	if (!parse_read_capacity_16_simple(buf, buf_read, size_bytes, &block_size))
 		return -1;
 
+	*size_bytes *= 512;
 	*sector_size = block_size;
 	return 0;
 }
