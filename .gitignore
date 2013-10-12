@@ -8,3 +8,9 @@
 diskscan
 arch/arch.c
 arch/arch.id
+configure
+config.status
+autom4te.cache/
+*.log
+config.h
+*~

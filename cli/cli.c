@@ -18,6 +18,7 @@
  * 
  */
 
+#include "config.h"
 #include "verbose.h"
 #include "diskscan.h"
 #include "version.h"

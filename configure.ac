@@ -1,0 +1,45 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.69])
+AC_INIT([diskscan], [0.14-dev], [https://github.com/baruch/diskscan/issues])
+AC_CONFIG_SRCDIR([diskscan.c])
+AC_CONFIG_HEADERS([config.h])
+
+# Checks for programs.
+AC_PROG_CC
+#AC_PROG_INSTALL
+
+# Checks for libraries.
+
+# Checks for header files.
+AC_CHECK_HEADERS([fcntl.h inttypes.h memory.h stdint.h stdlib.h string.h sys/ioctl.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_C_INLINE
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_FUNC_MMAP
+AC_CHECK_FUNCS([clock_gettime memset munmap strcasecmp strstr strtol])
+
+# Check the host arch
+AC_CANONICAL_HOST
+
+case $host_os in
+        linux*) machine=linux;;
+        freebsd*) machine=freebsd;;
+        *) exit 1;;
+esac
+
+AC_CONFIG_LINKS([arch/arch.c:arch/arch-$machine.c])
+
+#AC_CONFIG_FILES([Makefile
+#                 libscsicmd/Makefile])
+AC_OUTPUT

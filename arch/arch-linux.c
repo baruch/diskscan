@@ -1,3 +1,4 @@
+#include "config.h"
 #include "arch.h"
 #include "libscsicmd/include/scsicmd.h"
 
