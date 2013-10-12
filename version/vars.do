@@ -1,6 +1,4 @@
-redo-ifchange gitvars prodname
-
-read PROD <prodname
+redo-ifchange gitvars
 
 exec <gitvars
 read COMMIT
@@ -20,11 +18,11 @@ names_to_tag()
 		x=${x# }
 		x=${x#tag: }
 		cur=${x%%,*}
-		tagpost=${cur#$PROD-}
-		if [ "$cur" != "$tagpost" ]; then
+		tagpost=${cur}
+		#if [ "$cur" != "$tagpost" ]; then
 			echo "$tagpost"
 			return 0
-		fi
+		#fi
 		x=${x#*,}
 	done
 	commitpost=${COMMIT#???????}

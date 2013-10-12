@@ -1,6 +1,5 @@
-redo-ifchange gitvars.pre prodname
+redo-ifchange gitvars.pre
 
-read PROD <prodname
 exec >$3
 
 # Fix each line from gitvars.pre where git may or may not have already
@@ -16,7 +15,7 @@ while read line; do
 		redo-always   # git this from the git repo
 		x=${x%\$}  # remove trailing $
 		if [ "$x" = "%d" ]; then
-			tag=$(git describe --match="$PROD-*")
+			tag=$(git describe)
 			x="(tag: $tag)"
 		else
 			x=$(git log -1 --pretty=format:"$x")
