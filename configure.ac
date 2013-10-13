@@ -35,7 +35,7 @@ AC_CANONICAL_HOST
 case $host_os in
         linux*) machine=linux; libscsicmd="libscsicmd/libscsicmd.a" ;;
         freebsd*) machine=freebsd; libscsicmd="" ;;
-        *) exit 1;;
+        *) machine=generic; libscsicmd="";;
 esac
 AC_SUBST(LIBSCSICMD, [$libscsicmd])
 
