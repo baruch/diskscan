@@ -53,6 +53,7 @@ if [ -z "$DO_BUILT" ]; then
 		ln -s "$REDO" "$DO_PATH/$d";
 	done
 	[ -e /bin/true ] && TRUE=/bin/true || TRUE=/usr/bin/true
+	[ ! -e "$TRUE" ] && TRUE=`which true`
 	for d in redo-ifcreate redo-stamp redo-always; do 
 		ln -s $TRUE "$DO_PATH/$d";
 	done
