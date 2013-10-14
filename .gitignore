@@ -8,6 +8,7 @@
 diskscan
 diskscan.do
 arch/arch.c
+include/arch-internal.h
 arch/arch.id
 configure
 config.status

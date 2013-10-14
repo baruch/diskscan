@@ -70,14 +70,12 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 		return 1;
 	}
 
-	const int open_mode_flag = fix ? O_RDWR : O_RDONLY;
-	disk->fd = open(path, open_mode_flag|O_DIRECT);
-	if (disk->fd < 0) {
+	if (!disk_dev_open(&disk->dev, path)) {
 		ERROR("Failed to open path %s: %m", path);
 		return 1;
 	}
 
-	if (get_block_device_size(disk->fd, &disk->num_bytes, &disk->sector_size) < 0) {
+	if (disk_dev_read_cap(&disk->dev, &disk->num_bytes, &disk->sector_size) < 0) {
 		ERROR("Can't get block device size information for path %s: %m", path);
 		goto Error;
 	}
@@ -120,8 +118,7 @@ Error:
 int disk_close(disk_t *disk)
 {
 	INFO("Closed disk %s", disk->path);
-	close(disk->fd);
-	disk->fd = -1;
+	disk_dev_close(&disk->dev);
 	if (disk->latency_graph) {
 		free(disk->latency_graph);
 		disk->latency_graph = NULL;
@@ -197,7 +194,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	int error = 0;
 
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
-	ret = pread(disk->fd, data, data_size, offset);
+	ret = disk_dev_read(&disk->dev, offset, data_size, data);
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
 	t = (t_end.tv_sec - t_start.tv_sec) * 1000000000 +
@@ -233,7 +230,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 
 	if (t_msec > 3000 || error) {
 		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
-		ret = pwrite(disk->fd, data, data_size, offset);
+		ret = disk_dev_write(&disk->dev, offset, data_size, data);
 		if (ret != data_size) {
 			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %m", ret, errno);
 		}

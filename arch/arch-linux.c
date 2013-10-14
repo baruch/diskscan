@@ -8,6 +8,8 @@
 #include <scsi/sg.h>
 #include <memory.h>
 
+#include "arch-posix.c"
+
 static int get_block_device_size_block(int fd, uint64_t *size_bytes, uint64_t *sector_size)
 {
 	if (ioctl(fd, BLKGETSIZE64, size_bytes) < 0) {
@@ -115,12 +117,12 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	return 0;
 }
 
-int get_block_device_size(int fd, uint64_t *size_bytes, uint64_t *sector_size)
+int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size)
 {
-	if (get_block_device_size_scsi(fd, size_bytes, sector_size) == 0)
+	if (get_block_device_size_scsi(dev->fd, size_bytes, sector_size) == 0)
 		return 0;
 
-	if (get_block_device_size_block(fd, size_bytes, sector_size) == 0)
+	if (get_block_device_size_block(dev->fd, size_bytes, sector_size) == 0)
 		return 0;
 
 	return -1;

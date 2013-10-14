@@ -2,6 +2,7 @@
 #define _DISKSCAN_H_
 
 #include <stdint.h>
+#include "arch.h"
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
 
@@ -22,7 +23,7 @@ typedef struct latency_t {
 } latency_t;
 
 typedef struct disk_t {
-	int fd;
+	disk_dev_t dev;
 	char path[128];
 	char vendor[32];
 	char model[32];

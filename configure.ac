@@ -32,6 +32,8 @@ AC_CHECK_FUNCS([clock_gettime memset munmap strcasecmp strstr strtol])
 # Check the host arch
 AC_CANONICAL_HOST
 
+
+arch_internal="arch-posix.h"
 case $host_os in
         linux*) machine=linux; libscsicmd="libscsicmd/libscsicmd.a" ;;
         freebsd*) machine=freebsd; libscsicmd="" ;;
@@ -39,6 +41,7 @@ case $host_os in
 esac
 AC_SUBST(LIBSCSICMD, [$libscsicmd])
 
-AC_CONFIG_LINKS([arch/arch.c:arch/arch-$machine.c])
+AC_CONFIG_LINKS([arch/arch.c:arch/arch-$machine.c
+                 include/arch-internal.h:arch/$arch_internal])
 AC_CONFIG_FILES([diskscan.do])
 AC_OUTPUT
