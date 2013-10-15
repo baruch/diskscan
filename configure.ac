@@ -35,7 +35,7 @@ AC_CANONICAL_HOST
 
 arch_internal="arch-posix.h"
 case $host_os in
-        linux*) machine=linux; libscsicmd="libscsicmd/libscsicmd.a" ;;
+        linux*) machine=linux; libscsicmd="libscsicmd/libscsicmd.a"; arch_internal="arch-linux.h" ;;
         freebsd*) machine=freebsd; libscsicmd="" ;;
         *) machine=generic; libscsicmd="";;
 esac
