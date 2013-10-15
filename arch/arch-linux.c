@@ -10,19 +10,6 @@
 
 #include "arch-posix.c"
 
-static int get_block_device_size_block(int fd, uint64_t *size_bytes, uint64_t *sector_size)
-{
-	if (ioctl(fd, BLKGETSIZE64, size_bytes) < 0) {
-		return -1;
-	}
-
-	if (ioctl(fd, BLKSSZGET, sector_size) < 0) {
-		return -1;
-	}
-
-	return 0;
-}
-
 static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 		unsigned char *buf, unsigned buf_len,
 		unsigned char *sense, unsigned sense_len,
@@ -69,7 +56,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	return 0;
 }
 
-static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *sector_size)
+int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size)
 {
 	unsigned char cdb[32];
 	unsigned char buf[512];
@@ -82,7 +69,7 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	memset(buf, 0, sizeof(buf));
 
 	cdb_len = cdb_read_capacity_10(cdb);
-	ret = sg_ioctl(fd, cdb, cdb_len, buf, sizeof(buf), sense, sizeof(sense), &buf_read, &sense_read);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), sense, sizeof(sense), &buf_read, &sense_read);
 	if (ret < 0)
 		return -1;
 
@@ -102,7 +89,7 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 
 	// disk size is too large for READ CAPACITY 10, need to use READ CAPACITY 16
 	cdb_len = cdb_read_capacity_16(cdb, sizeof(buf));
-	ret = sg_ioctl(fd, cdb, cdb_len, buf, sizeof(buf), sense, sizeof(sense), &buf_read, &sense_read);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), sense, sizeof(sense), &buf_read, &sense_read);
 	if (ret < 0)
 		return -1;
 
@@ -115,15 +102,4 @@ static int get_block_device_size_scsi(int fd, uint64_t *size_bytes, uint64_t *se
 	*size_bytes *= 512;
 	*sector_size = block_size;
 	return 0;
-}
-
-int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size)
-{
-	if (get_block_device_size_scsi(dev->fd, size_bytes, sector_size) == 0)
-		return 0;
-
-	if (get_block_device_size_block(dev->fd, size_bytes, sector_size) == 0)
-		return 0;
-
-	return -1;
 }
