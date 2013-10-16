@@ -164,6 +164,23 @@ static unsigned str_to_scan_size(const char *str)
 		return 0;
 	}
 
+	if (*endptr != 0) {
+		unsigned factor = 1;
+
+		if (strcmp(endptr, "b") == 0 || strcmp(endptr, "B") == 0)
+			factor = 1;
+		else if (strcmp(endptr, "k") == 0 || strcmp(endptr, "K") == 0)
+			factor = 1024;
+		else if (strcmp(endptr, "m") == 0 || strcmp(endptr, "M") == 0)
+			factor = 1024*1024;
+		else {
+			ERROR("Unknown suffix '%s': B, K, and M are accepted", endptr);
+			return 0;
+		}
+
+		val *= factor;
+	}
+
 	unsigned retval = (unsigned)val;
 	if (retval > 32*1024*1024) {
 		ERROR("Maximum transfer size is 32MB, cannot handle more than that for now.");
