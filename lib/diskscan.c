@@ -333,7 +333,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
-	INFO("Scanning disk %s", disk->path);
+	INFO("Scanning disk %s in %u byte steps", disk->path, data_size);
 	VVVERBOSE("Using buffer of size %d", data_size);
 
 	if (data == NULL) {
