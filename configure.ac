@@ -32,6 +32,10 @@ AC_CHECK_FUNCS([clock_gettime memset munmap strcasecmp strstr strtol])
 # Check the host arch
 AC_CANONICAL_HOST
 
+AX_PYTHON_MODULE(yaml, fatal)
+# Need to make the two below non-fatal by not building the makefile if they are missing
+AX_PYTHON_MODULE(markdown, fatal)
+AX_PYTHON_MODULE(BeautifulSoup, fatal)
 
 arch_internal="arch-posix.h"
 case $host_os in
