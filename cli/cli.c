@@ -164,6 +164,12 @@ static unsigned str_to_scan_size(const char *str)
 		return 0;
 	}
 
+	unsigned retval = (unsigned)val;
+	if (retval > 32*1024*1024) {
+		ERROR("Maximum transfer size is 32MB, cannot handle more than that for now.");
+		return 0;
+	}
+
 	return (unsigned)val;
 }
 
