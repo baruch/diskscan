@@ -159,7 +159,8 @@ static unsigned str_to_scan_size(const char *str)
 
 	errno = 0;
 	val = strtol(str, &endptr, 0);
-	if (errno != 0 || val <= 0 || val % 512 != 0) {
+	if (errno != 0 || val <= 0) {
+		ERROR("Failed to parse the value (%s) to a number", str);
 		return 0;
 	}
 
@@ -228,8 +229,8 @@ static int parse_args(int argc, char **argv, options_t *opts)
 		return usage();
 	}
 
-	if (opts->scan_size == 0 || opts->scan_size % 512 != 0) {
-		printf("Scan size is invalid, must be a positive multiple of 512\n");
+	if (opts->scan_size == 0) {
+		printf("Scan size is invalid, must be a positive number\n");
 		return usage();
 	}
 

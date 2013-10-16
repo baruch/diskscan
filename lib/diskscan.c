@@ -324,6 +324,13 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	struct timespec ts_start;
 	struct timespec ts_end;
 
+	if (data_size % disk->sector_size != 0) {
+		data_size -= data_size % disk->sector_size;
+		if (data_size == 0)
+			data_size = disk->sector_size;
+		ERROR("Cannot scan data not in multiples of the sector size, adjusted scan size to %u", data_size);
+	}
+
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
 	INFO("Scanning disk %s", disk->path);
