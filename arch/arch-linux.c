@@ -34,7 +34,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	hdr.dxferp = buf;
 	hdr.cmdp = cdb;
 	hdr.sbp = sense;
-	hdr.timeout = 120*1000;
+	hdr.timeout = 300*1000;
 	hdr.flags = SG_FLAG_LUN_INHIBIT;
 	hdr.pack_id = 0;
 	hdr.usr_ptr = 0;
