@@ -31,6 +31,7 @@ typedef struct disk_t {
 	uint64_t num_bytes;
 	uint64_t sector_size;
 	int run;
+	int fix;
 
 	uint64_t num_errors;
 	uint64_t histogram[ARRAY_SIZE(histogram_time)];

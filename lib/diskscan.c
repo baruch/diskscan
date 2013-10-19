@@ -57,6 +57,7 @@ enum scan_mode str_to_scan_mode(const char *s)
 int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len)
 {
 	memset(disk, 0, sizeof(*disk));
+	disk->fix = fix;
 
 	INFO("Validating path %s", path);
 	if (access(path, F_OK)) {
@@ -228,7 +229,7 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		VERBOSE("Scanning at offset %" PRIu64 " took %"PRIu64" msec", offset, t_msec);
 	}
 
-	if (t_msec > 3000 || error) {
+	if (disk->fix && (t_msec > 3000 || error)) {
 		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
 		ret = disk_dev_write(&disk->dev, offset, data_size, data);
 		if (ret != data_size) {
