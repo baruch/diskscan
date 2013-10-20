@@ -362,7 +362,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	}
 
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
-		VVERBOSE("Scanning stride starting at %"PRIu64, offset);
+		VERBOSE("Scanning stride starting at %"PRIu64, offset);
 		latency_bucket_prepare(disk, &state, offset);
 		disk_scan_latency_stride(disk, &state, offset, data_size, scan_order);
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
