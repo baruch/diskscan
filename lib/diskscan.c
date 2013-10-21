@@ -186,27 +186,60 @@ static void latency_bucket_add(disk_t *disk, uint64_t latency, struct scan_state
 	state->latency[state->latency_count++] = latency;
 }
 
-static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size, struct scan_state *state)
+static const char *error_to_str(enum result_error_e err)
+{
+	switch (err)
+	{
+		case ERROR_NONE: return "none";
+		case ERROR_CORRECTED: return "corrected";
+		case ERROR_UNCORRECTED: return "uncorrected";
+		case ERROR_NEED_RETRY: return "need_retry";
+		case ERROR_FATAL: return "fatal";
+	}
+
+	return "unknown";
+}
+
+static const char *data_to_str(enum result_data_e data)
+{
+	switch (data)
+	{
+		case DATA_FULL: return "full";
+		case DATA_PARTIAL: return "partial";
+		case DATA_NONE: return "none";
+	}
+
+	return "unknown";
+}
+
+static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_size, struct scan_state *state)
 {
 	ssize_t ret;
 	struct timespec t_start;
 	struct timespec t_end;
 	uint64_t t;
 	int error = 0;
+	io_result_t io_res;
 
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
-	ret = disk_dev_read(&disk->dev, offset, data_size, data);
+	ret = disk_dev_read(&disk->dev, offset, data_size, data, &io_res);
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
 	t = (t_end.tv_sec - t_start.tv_sec) * 1000000000 +
 		t_end.tv_nsec - t_start.tv_nsec;
 
-	if (ret != data_size) {
+	if (io_res.data != DATA_FULL || io_res.error != ERROR_NONE) {
 		int s_errno = errno;
 		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd: %m", offset, data_size, ret);
+		ERROR("Details: error=%s data=%s %02X/%02X/%02X", error_to_str(io_res.error), data_to_str(io_res.data),
+				io_res.info.sense_key, io_res.info.asc, io_res.info.ascq);
 		report_scan_error(disk, offset, data_size, t);
 		disk->num_errors++;
 		error = 1;
+		if (io_res.error == ERROR_FATAL) {
+			ERROR("Fatal error occurred, bailing out.");
+			return false;
+		}
 
 		if (s_errno != EIO && s_errno != 0)
 			abort();
@@ -231,11 +264,13 @@ static void disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 
 	if (disk->fix && (t_msec > 3000 || error)) {
 		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
-		ret = disk_dev_write(&disk->dev, offset, data_size, data);
+		ret = disk_dev_write(&disk->dev, offset, data_size, data, &io_res);
 		if (ret != data_size) {
 			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %m", ret, errno);
 		}
 	}
+
+	return true;
 }
 
 static uint64_t calc_latency_stride(disk_t *disk)
@@ -299,7 +334,7 @@ static uint32_t *calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t str
 		return NULL;
 }
 
-static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
+static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
 {
 	unsigned i;
 
@@ -311,8 +346,11 @@ static void disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 			data_size = remainder;
 			VERBOSE("Last part scanning size %"PRIu64, data_size);
 		}
-		disk_scan_part(disk, offset, state->data, data_size, state);
+		if (!disk_scan_part(disk, offset, state->data, data_size, state))
+			return false;
 	}
+
+	return true;
 }
 
 int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
@@ -364,7 +402,8 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
 		VERBOSE("Scanning stride starting at %"PRIu64" done %"PRIu64"%%", offset, offset*100/disk_size_bytes);
 		latency_bucket_prepare(disk, &state, offset);
-		disk_scan_latency_stride(disk, &state, offset, data_size, scan_order);
+		if (!disk_scan_latency_stride(disk, &state, offset, data_size, scan_order))
+			break;
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
 	}
 
