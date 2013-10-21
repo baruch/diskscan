@@ -25,6 +25,7 @@
 #include "median.h"
 #include "compiler.h"
 
+#include <sched.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -353,6 +354,18 @@ static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 	return true;
 }
 
+static void set_realtime(bool realtime)
+{
+	struct sched_param param;
+	memset(&param, 0, sizeof(param));
+	param.sched_priority = 1;
+
+	if (realtime)
+		sched_setscheduler(0, SCHED_RR, &param);
+	else
+		sched_setscheduler(0, SCHED_OTHER, &param);
+}
+
 int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 {
 	disk->run = 1;
@@ -370,6 +383,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 		ERROR("Cannot scan data not in multiples of the sector size, adjusted scan size to %u", data_size);
 	}
 
+	set_realtime(true);
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
 	INFO("Scanning disk %s in %u byte steps", disk->path, data_size);
@@ -413,11 +427,12 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	report_scan_done(disk);
 
 Exit:
+	clock_gettime(CLOCK_MONOTONIC, &ts_end);
+	set_realtime(false);
 	free(scan_order);
 	free_buffer(data, data_size);
 	free(state.latency);
 	disk->run = 0;
-	clock_gettime(CLOCK_MONOTONIC, &ts_end);
 	INFO("Scan took %d second", (int)(ts_end.tv_sec - ts_start.tv_sec));
 	return result;
 }
