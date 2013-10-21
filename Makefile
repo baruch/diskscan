@@ -13,5 +13,9 @@ clean:
 install:
 	./do all install
 
+# This only works with redo
+dist:
+	redo dist
+
 distclean:
 	./do clean

@@ -1,0 +1,10 @@
+.git
+*.o
+.*.d
+.*.sw*
+*~
+*.did
+*.bz2
+tags
+include/arch-internal.h
+arch/arch.c
