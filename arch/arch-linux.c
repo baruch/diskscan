@@ -155,7 +155,7 @@ ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes
 	memset(buf, 0, len_bytes);
 	memset(io_res, 0, sizeof(*io_res));
 
-	cdb_len = cdb_read_10(cdb, true, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
+	cdb_len = cdb_read_10(cdb, false, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
 	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, io_res);
 	if (ret < 0) {
 		return -1;
@@ -181,7 +181,7 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 	memset(buf, 0, len_bytes);
 	memset(io_res, 0, sizeof(*io_res));
 
-	cdb_len = cdb_write_10(cdb, true, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
+	cdb_len = cdb_write_10(cdb, false, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
 	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_TO_DEV, sense, sizeof(sense), &buf_read, &sense_read, io_res);
 	if (ret < 0) {
 		return -1;
