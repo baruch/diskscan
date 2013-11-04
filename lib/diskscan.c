@@ -338,9 +338,18 @@ static uint32_t *calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t str
 static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
 {
 	unsigned i;
+	int progress_full = 1000;
+	int progress_part = 0;
 
 	for (i = 0; disk->run && scan_order[i] != UINT32_MAX; i++) {
 		uint64_t offset = base_offset + scan_order[i];
+		int progress_part_new = offset * progress_full / disk->num_bytes;
+
+		if (progress_part_new != progress_part) {
+			report_progress(disk, progress_part_new, progress_full);
+			progress_part = progress_part_new;
+		}
+
 		VVVERBOSE("Scanning at offset %"PRIu64" index %u", offset, i);
 		uint64_t remainder = base_offset + state->latency_stride * disk->sector_size - offset;
 		if (remainder < data_size) {
@@ -375,6 +384,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	struct scan_state state = {.latency = NULL};
 	struct timespec ts_start;
 	struct timespec ts_end;
+	time_t scan_time;
 
 	if (data_size % disk->sector_size != 0) {
 		data_size -= data_size % disk->sector_size;
@@ -387,6 +397,8 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
 
 	INFO("Scanning disk %s in %u byte steps", disk->path, data_size);
+	scan_time = time(NULL);
+	INFO("Scan started at: %s", ctime(&scan_time));
 	VVVERBOSE("Using buffer of size %d", data_size);
 
 	if (data == NULL) {
@@ -415,6 +427,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
 		VERBOSE("Scanning stride starting at %"PRIu64" done %"PRIu64"%%", offset, offset*100/disk_size_bytes);
+		report_progress(disk, offset * 1000 / disk_size_bytes, 1000);
 		latency_bucket_prepare(disk, &state, offset);
 		if (!disk_scan_latency_stride(disk, &state, offset, data_size, scan_order))
 			break;
@@ -433,6 +446,8 @@ Exit:
 	free_buffer(data, data_size);
 	free(state.latency);
 	disk->run = 0;
+	scan_time = time(NULL);
+	INFO("Scan ended at: %s", ctime(&scan_time));
 	INFO("Scan took %d second", (int)(ts_end.tv_sec - ts_start.tv_sec));
 	return result;
 }

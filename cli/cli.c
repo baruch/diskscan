@@ -65,6 +65,11 @@ static int usage(void) {
 	return 1;
 }
 
+void report_progress(disk_t * UNUSED(disk), int progress_part, int progress_full)
+{
+	printf("Progress: %4.1f%%\r", (float)progress_part * 100.0 / (float)progress_full);
+	fflush(stdout);
+}
 
 void report_scan_success(disk_t *UNUSED(disk), uint64_t UNUSED(offset_bytes), uint64_t UNUSED(data_size), uint64_t UNUSED(time))
 {

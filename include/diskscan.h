@@ -47,6 +47,7 @@ void disk_scan_stop(disk_t *disk);
 enum scan_mode str_to_scan_mode(const char *s);
 
 /* Implemented by the user (gui/cli) */
+void report_progress(disk_t *disk, int percent_part, int percent_full);
 void report_scan_success(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time);
 void report_scan_error(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time);
 void report_scan_done(disk_t *disk);
