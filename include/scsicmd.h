@@ -135,6 +135,7 @@ typedef struct sense_info_t {
         bool ata_status_valid;
         ata_status_t ata_status;
         bool incorrect_len_indicator;
+        uint32_t vendor_unique_error;
 } sense_info_t;
 bool scsi_parse_sense(unsigned char *sense, int sense_len, sense_info_t *info);
 
