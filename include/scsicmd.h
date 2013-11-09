@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "sense_key_list.h"
+
 #define SCSI_VENDOR_LEN 8
 #define SCSI_MODEL_LEN 16
 #define SCSI_FW_REVISION_LEN 4
@@ -30,24 +32,14 @@ typedef char scsi_model_t[SCSI_MODEL_LEN+1];
 typedef char scsi_fw_revision_t[SCSI_FW_REVISION_LEN+1];
 typedef char scsi_serial_t[SCSI_SERIAL_LEN+1];
 
+#undef SENSE_KEY_MAP
+#define SENSE_KEY_MAP(_name_, _val_) SENSE_KEY_##_name_ = _val_,
 enum sense_key_e {
-        SENSE_KEY_NO_SENSE = 0x0,
-        SENSE_KEY_RECOVERED_ERROR = 0x1,
-        SENSE_KEY_NOT_READY = 0x2,
-        SENSE_KEY_MEDIUM_ERROR = 0x3,
-        SENSE_KEY_HARDWARE_ERROR = 0x4,
-        SENSE_KEY_ILLEGAL_REQUEST = 0x5,
-        SENSE_KEY_UNIT_ATTENTION = 0x6,
-        SENSE_KEY_DATA_PROTECT = 0x7,
-        SENSE_KEY_BLANK_CHECK = 0x8,
-        SENSE_KEY_VENDOR_SPECIFIC = 0x9,
-        SENSE_KEY_COPY_ABORTED = 0xA,
-        SENSE_KEY_ABORTED_COMMAND = 0xB,
-        SENSE_KEY_RESERVED_C = 0xC,
-        SENSE_KEY_VOLUME_OVERFLOW = 0xD,
-        SENSE_KEY_MISCOMPARE = 0xE,
-        SENSE_KEY_COMPLETED = 0xF,
+	SENSE_KEY_LIST
 };
+#undef SENSE_KEY_MAP
+
+const char *sense_key_to_name(enum sense_key_e sense_key);
 
 int cdb_tur(unsigned char *cdb);
 
