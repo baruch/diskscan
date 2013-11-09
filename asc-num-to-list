@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+import sys
+
+def nn_str(name):
+    return name.replace('NN', '%u')
+
+# Skip the header
+for line in sys.stdin:
+    if line[0] == '-':
+        break
+
+# Read the raw data
+print '#ifndef LIBSCSICMD_ASC_NUM_LIST_H'
+print '#define LIBSCSICMD_ASC_NUM_LIST_H'
+print '#define ASC_NUM_LIST \\'
+for line in sys.stdin:
+    line = line.strip()
+    asc = int(line[0:2], 16)
+    ascq_str = line[4:6]
+    if ascq_str == 'NN':
+        ascq = 'NN'
+    else:
+        ascq = int(ascq_str, 16)
+    name = line[25:]
+    if name == '':
+        continue
+
+    if ascq == 'NN':
+        name_nn = nn_str(name)
+        print 'SENSE_CODE_KEYED(0x%x, "%s") \\' % (asc, name_nn)
+    else:
+        print 'SENSE_CODE(0x%x, 0x%x, "%s") \\' % (asc, ascq, name)
+print
+print '#endif'

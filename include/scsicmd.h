@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include "sense_key_list.h"
+#include "asc_num_list.h"
 
 #define SCSI_VENDOR_LEN 8
 #define SCSI_MODEL_LEN 16
@@ -40,6 +41,7 @@ enum sense_key_e {
 #undef SENSE_KEY_MAP
 
 const char *sense_key_to_name(enum sense_key_e sense_key);
+const char *asc_num_to_name(uint8_t asc, uint8_t ascq);
 
 int cdb_tur(unsigned char *cdb);
 
