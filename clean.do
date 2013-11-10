@@ -1,6 +1,6 @@
 exec >&2
 redo-always
-redo version/clean Documentation/clean libscsicmd/clean
+redo version/clean libscsicmd/clean
 for dir in . cli lib arch; do
         rm -f $dir/*.a $dir/*.o $dir/*.did $dir/.*.d
 done

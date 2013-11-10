@@ -2,7 +2,7 @@ exec >&2
 
 redo-always
 redo-ifchange config
-redo-ifchange Documentation/all version/all
+redo-ifchange version/all
 
 # Clean unneeded files
 
