@@ -44,6 +44,9 @@ struct scan_state {
 	uint32_t latency_count;
 	uint32_t *latency;
 	void *data;
+	uint64_t progress_bytes;
+	int progress_part;
+	int progress_full;
 };
 
 enum scan_mode str_to_scan_mode(const char *s)
@@ -335,20 +338,32 @@ static uint32_t *calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t str
 		return NULL;
 }
 
+static void progress_calc(disk_t *disk, struct scan_state *state, uint64_t add)
+{
+	bool do_update;
+
+	if (add != 0) {
+		state->progress_bytes += add;
+		int progress_part_new = state->progress_bytes * state->progress_full / disk->num_bytes;
+		do_update = progress_part_new != state->progress_part;
+		state->progress_part = progress_part_new;
+	} else {
+		do_update = true;
+	}
+
+	if (do_update) {
+		report_progress(disk, state->progress_part, state->progress_full);
+	}
+}
+
 static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
 {
 	unsigned i;
-	int progress_full = 1000;
-	int progress_part = 0;
 
 	for (i = 0; disk->run && scan_order[i] != UINT32_MAX; i++) {
 		uint64_t offset = base_offset + scan_order[i];
-		int progress_part_new = offset * progress_full / disk->num_bytes;
 
-		if (progress_part_new != progress_part) {
-			report_progress(disk, progress_part_new, progress_full);
-			progress_part = progress_part_new;
-		}
+		progress_calc(disk, state, data_size);
 
 		VVVERBOSE("Scanning at offset %"PRIu64" index %u", offset, i);
 		uint64_t remainder = base_offset + state->latency_stride * disk->sector_size - offset;
@@ -381,7 +396,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	void *data = allocate_buffer(data_size);
 	uint32_t *scan_order = NULL;
 	int result = 0;
-	struct scan_state state = {.latency = NULL};
+	struct scan_state state = {.latency = NULL, .progress_bytes = 0, .progress_full = 1000};
 	struct timespec ts_start;
 	struct timespec ts_end;
 	time_t scan_time;
@@ -427,7 +442,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
 		VERBOSE("Scanning stride starting at %"PRIu64" done %"PRIu64"%%", offset, offset*100/disk_size_bytes);
-		report_progress(disk, offset * 1000 / disk_size_bytes, 1000);
+		progress_calc(disk, &state, 0);
 		latency_bucket_prepare(disk, &state, offset);
 		if (!disk_scan_latency_stride(disk, &state, offset, data_size, scan_order))
 			break;
