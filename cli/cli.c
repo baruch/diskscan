@@ -43,6 +43,8 @@ struct options_t {
 	int fix;
 	enum scan_mode mode;
 	unsigned scan_size;
+	char *data_log_name;
+	char *data_log_raw_name;
 };
 
 static void print_header(void)
@@ -57,10 +59,12 @@ static int usage(void) {
 	printf("diskscan version %s\n\n", TAG);
 	printf("diskscan [options] /dev/sd\n");
 	printf("Options:\n");
-	printf("    -v, --verbose     - Increase verbosity, multiple uses for higher levels\n");
-	printf("    -f, --fix         - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
-	printf("    -s, --scan <mode> - Scan in order (seq, random)\n");
-	printf("    -e, --size <size> - Scan size (default to 64K, must be multiple of 512)\n");
+	printf("    -v, --verbose        - Increase verbosity, multiple uses for higher levels\n");
+	printf("    -f, --fix            - Attempt to fix near failures, nothing can be done for unreadable sectors\n");
+	printf("    -s, --scan <mode>    - Scan in order (seq, random)\n");
+	printf("    -e, --size <size>    - Scan size (default to 64K, must be multiple of 512)\n");
+	printf("    -o, --output <file>  - Output file (json)\n");
+	printf("    -r, --raw-log <file> - Raw log of all scan results (json)\n");
 	printf("\n");
 	return 1;
 }
@@ -209,10 +213,12 @@ static int parse_args(int argc, char **argv, options_t *opts)
 			{"fix",     no_argument,       0,  'f'},
 			{"scan",    required_argument, 0,  's'},
 			{"size",    required_argument, 0,  'e'},
+			{"raw-log", required_argument, 0,  'r'},
+			{"output",  required_argument, 0,  'o'},
 			{0,         0,                 0,  0}
 		};
 
-		c = getopt_long(argc, argv, "vfs:e:", long_options, &option_index);
+		c = getopt_long(argc, argv, "vfs:e:o:r:", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -235,6 +241,13 @@ static int parse_args(int argc, char **argv, options_t *opts)
 				break;
 			case 'e':
 				opts->scan_size = str_to_scan_size(optarg);
+				break;
+
+			case 'o':
+				opts->data_log_name = optarg;
+				break;
+			case 'r':
+				opts->data_log_raw_name = optarg;
 				break;
 
 			default:
@@ -291,6 +304,7 @@ static void setup_signals(void)
 
 int diskscan_cli(int argc, char **argv)
 {
+	int ret;
 	options_t opts;
 	memset(&opts, 0, sizeof(opts));
 	opts.mode = SCAN_MODE_SEQ;
@@ -311,9 +325,18 @@ int diskscan_cli(int argc, char **argv)
 		return 1;
 	*/
 
+	if (opts.data_log_raw_name)
+		data_log_raw_start(&disk.data_raw, opts.data_log_raw_name, &disk);
+	if (opts.data_log_name)
+		data_log_start(&disk.data_log, opts.data_log_name, &disk);
+	ret = 0;
 	if (disk_scan(&disk, opts.mode, opts.scan_size))
-		return 1;
+		ret = 1;
+	if (opts.data_log_raw_name)
+		data_log_raw_end(&disk.data_raw);
+	if (opts.data_log_name)
+		data_log_end(&disk.data_log);
 
 	disk_close(&disk);
-	return 0;
+	return ret;
 }

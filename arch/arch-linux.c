@@ -1,6 +1,8 @@
 #include "config.h"
 #include "arch.h"
 #include "libscsicmd/include/scsicmd.h"
+#include "libscsicmd/include/ata.h"
+#include "libscsicmd/include/ata_parse.h"
 #include "verbose.h"
 
 #include <linux/fs.h>
@@ -13,6 +15,28 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <ctype.h>
+
+static void strtrim(char *s)
+{
+	char *t;
+
+	// Skip initial spaces
+	for (t = s; *t && isspace(*t); t++)
+		;
+
+	if (t != s) {
+		// Copy content to start
+		while (*t && !isspace(*t)) {
+			*s++ = *t++;
+		}
+		*s = 0;
+	} else {
+		while (*t && !isspace(*t))
+			t++;
+		*t = 0;
+	}
+}
 
 static enum result_error_e sense_to_error(sense_info_t *info)
 {
@@ -108,6 +132,9 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 		io_res->data = DATA_PARTIAL;
 
 	if (hdr.sb_len_wr) {
+		memcpy(io_res->sense, sense, hdr.sb_len_wr);
+		io_res->sense_len = hdr.sb_len_wr;
+
 		*sense_read = hdr.sb_len_wr;
 
 		// Error with sense, parse the sense
@@ -241,5 +268,60 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 
 	*size_bytes *= 512;
 	dev->sector_size = *sector_size = block_size;
+	return 0;
+}
+
+
+int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata)
+{
+	unsigned char cdb[32];
+	unsigned char buf[512];
+	unsigned char sense[256];
+	int cdb_len;
+	unsigned buf_read = 0;
+	unsigned sense_read = 0;
+	int ret;
+	io_result_t io_res;
+
+	*is_ata = false;
+	memset(buf, 0, sizeof(buf));
+
+	cdb_len = cdb_inquiry_simple(cdb, sizeof(buf));
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	if (ret < 0)
+		return -1;
+
+	int device_type;
+	if (!parse_inquiry(buf, buf_read, &device_type, vendor, model, fw_rev, serial))
+	{
+		return -1;
+	}
+	strtrim(vendor);
+	strtrim(model);
+	strtrim(fw_rev);
+	strtrim(serial);
+
+	// If the vendor doesn't start with ATA it is a proper SCSI interface
+	if (strncmp(vendor, "ATA", 3) != 0)
+		return 0;
+
+	*is_ata = true;
+
+	// For an ATA disk we need to get the proper ATA IDENTIFY response
+	memset(buf, 0, sizeof(buf));
+	cdb_len = cdb_ata_identify(cdb);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	if (ret < 0)
+		return -1;
+
+	ata_get_ata_identify_model((char*)buf, vendor);
+	strtrim(vendor);
+	strcpy(model, vendor + strlen(vendor) + 1);
+	strtrim(model);
+	ata_get_ata_identify_fw_rev((char*)buf, fw_rev);
+	strtrim(fw_rev);
+	ata_get_ata_identify_serial_number((char*)buf, serial);
+	strtrim(serial);
+
 	return 0;
 }

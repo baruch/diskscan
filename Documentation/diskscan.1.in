@@ -69,6 +69,15 @@ default and random test is still experimental with regard to its usefulness.
 \fB-e <size>\fR, \fB--size <size>\fR
 Set the size in which the scan will be done, this must be a multiple of the sector size
 which is normally 512 bytes.
+.PP
+\fB-o <file>\fR, \fB--output <file>\fR
+Set the output file that the scan will generate. This is a JSON file with the
+summary and details about the exceptional events found during the scan.
+.PP
+\fB-r <file>\fR, \fB--raw-log <file>\fR
+Set the output file for the raw log which logs everything done and seen during
+the scan. This is a rather large file but it can help get the finer details of
+the scan progress and the disk behavior during the scan. This is too a JSON file.
 .SH "SEE ALSO"
 \fBbadblocks\fR(1), \fBfsck\fR(1)
 .SH AUTHOR

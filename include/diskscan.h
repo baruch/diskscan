@@ -1,6 +1,7 @@
 #ifndef _DISKSCAN_H_
 #define _DISKSCAN_H_
 
+#include <stdio.h>
 #include <stdint.h>
 #include "arch.h"
 
@@ -22,12 +23,24 @@ typedef struct latency_t {
 	uint32_t latency_median_msec;
 } latency_t;
 
+typedef struct data_log_raw_t {
+	FILE *f;
+	bool is_first;
+} data_log_raw_t;
+
+typedef struct data_log_t {
+	FILE *f;
+	bool is_first;
+} data_log_t;
+
 typedef struct disk_t {
 	disk_dev_t dev;
 	char path[128];
 	char vendor[32];
 	char model[32];
+	char fw_rev[32];
 	char serial[32];
+	bool is_ata;
 	uint64_t num_bytes;
 	uint64_t sector_size;
 	int run;
@@ -37,6 +50,9 @@ typedef struct disk_t {
 	uint64_t histogram[ARRAY_SIZE(histogram_time)];
 	unsigned latency_graph_len;
 	latency_t *latency_graph;
+
+	data_log_raw_t data_raw;
+	data_log_t data_log;
 } disk_t;
 
 int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len);
@@ -51,5 +67,11 @@ void report_progress(disk_t *disk, int percent_part, int percent_full);
 void report_scan_success(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time);
 void report_scan_error(disk_t *disk, uint64_t offset_bytes, uint64_t data_size, uint64_t time);
 void report_scan_done(disk_t *disk);
+
+/* Used to log data to files */
+void data_log_raw_start(data_log_raw_t *log_raw, const char *filename, disk_t *disk);
+void data_log_raw_end(data_log_raw_t *log_raw);
+void data_log_start(data_log_t *log, const char *filename, disk_t *disk);
+void data_log_end(data_log_t *log);
 
 #endif

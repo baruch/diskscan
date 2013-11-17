@@ -24,6 +24,7 @@
 #include "arch.h"
 #include "median.h"
 #include "compiler.h"
+#include "data.h"
 
 #include <sched.h>
 #include <memory.h>
@@ -101,6 +102,11 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 	const uint64_t new_bytes = new_bytes_raw - new_bytes_leftover;
 	disk->num_bytes = new_bytes;
 #endif
+
+	if (disk_dev_identify(&disk->dev, disk->vendor, disk->model, disk->fw_rev, disk->serial, &disk->is_ata) < 0) {
+		ERROR("Can't identify disk for path %s: %m", path);
+		goto Error;
+	}
 
 	strncpy(disk->path, path, sizeof(disk->path));
 	disk->path[sizeof(disk->path)-1] = 0;
@@ -231,7 +237,13 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 
 	t = (t_end.tv_sec - t_start.tv_sec) * 1000000000 +
 		t_end.tv_nsec - t_start.tv_nsec;
+	const uint64_t t_msec = t / 1000000;
 
+	// Perform logging
+	data_log_raw(&disk->data_raw, offset/disk->sector_size, data_size/disk->sector_size, &io_res, t);
+	data_log(&disk->data_log, offset/disk->sector_size, data_size/disk->sector_size, &io_res, t);
+
+	// Handle error or incomplete data
 	if (io_res.data != DATA_FULL || io_res.error != ERROR_NONE) {
 		int s_errno = errno;
 		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd: %m", offset, data_size, ret);
@@ -253,7 +265,6 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		report_scan_success(disk, offset, data_size, t);
 	}
 
-	uint64_t t_msec = t / 1000000;
 	unsigned hist_idx = 0;
 	while (t_msec >= histogram_time[hist_idx] && hist_idx < ARRAY_SIZE(disk->histogram) - 1) {
 		hist_idx++;
