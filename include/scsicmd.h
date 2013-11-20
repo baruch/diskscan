@@ -20,6 +20,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "sense_key_list.h"
+#include "asc_num_list.h"
+
 #define SCSI_VENDOR_LEN 8
 #define SCSI_MODEL_LEN 16
 #define SCSI_FW_REVISION_LEN 4
@@ -30,24 +33,15 @@ typedef char scsi_model_t[SCSI_MODEL_LEN+1];
 typedef char scsi_fw_revision_t[SCSI_FW_REVISION_LEN+1];
 typedef char scsi_serial_t[SCSI_SERIAL_LEN+1];
 
+#undef SENSE_KEY_MAP
+#define SENSE_KEY_MAP(_name_, _val_) SENSE_KEY_##_name_ = _val_,
 enum sense_key_e {
-        SENSE_KEY_NO_SENSE = 0x0,
-        SENSE_KEY_RECOVERED_ERROR = 0x1,
-        SENSE_KEY_NOT_READY = 0x2,
-        SENSE_KEY_MEDIUM_ERROR = 0x3,
-        SENSE_KEY_HARDWARE_ERROR = 0x4,
-        SENSE_KEY_ILLEGAL_REQUEST = 0x5,
-        SENSE_KEY_UNIT_ATTENTION = 0x6,
-        SENSE_KEY_DATA_PROTECT = 0x7,
-        SENSE_KEY_BLANK_CHECK = 0x8,
-        SENSE_KEY_VENDOR_SPECIFIC = 0x9,
-        SENSE_KEY_COPY_ABORTED = 0xA,
-        SENSE_KEY_ABORTED_COMMAND = 0xB,
-        SENSE_KEY_RESERVED_C = 0xC,
-        SENSE_KEY_VOLUME_OVERFLOW = 0xD,
-        SENSE_KEY_MISCOMPARE = 0xE,
-        SENSE_KEY_COMPLETED = 0xF,
+	SENSE_KEY_LIST
 };
+#undef SENSE_KEY_MAP
+
+const char *sense_key_to_name(enum sense_key_e sense_key);
+const char *asc_num_to_name(uint8_t asc, uint8_t ascq);
 
 int cdb_tur(unsigned char *cdb);
 
@@ -135,6 +129,7 @@ typedef struct sense_info_t {
         bool ata_status_valid;
         ata_status_t ata_status;
         bool incorrect_len_indicator;
+        uint32_t vendor_unique_error;
 } sense_info_t;
 bool scsi_parse_sense(unsigned char *sense, int sense_len, sense_info_t *info);
 
@@ -143,5 +138,21 @@ int cdb_inquiry(unsigned char *cdb, bool evpd, char page_code, uint16_t alloc_le
 static inline int cdb_inquiry_simple(unsigned char *cdb, uint16_t alloc_len) { return cdb_inquiry(cdb, 0, 0, alloc_len); }
 bool parse_inquiry(char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor,
                    scsi_model_t model, scsi_fw_revision_t rev, scsi_serial_t serial);
+
+/* read capacity */
+int cdb_read_capacity_10(unsigned char *cdb);
+bool parse_read_capacity_10(unsigned char *buf, unsigned buf_len, uint32_t *max_lba, uint32_t *block_size);
+int cdb_read_capacity_16(unsigned char *cdb, uint32_t alloc_len);
+bool parse_read_capacity_16(unsigned char *buf, unsigned buf_len, uint64_t *max_lba, uint32_t *block_size, bool *prot_enable,
+		unsigned *p_type, unsigned *p_i_exponent, unsigned *logical_blocks_per_physical_block_exponent,
+		bool *thin_provisioning_enabled, bool *thin_provisioning_zero, unsigned *lowest_aligned_lba);
+static inline bool parse_read_capacity_16_simple(unsigned char *buf, unsigned buf_len, uint64_t *max_lba, uint32_t *block_size)
+{
+	return parse_read_capacity_16(buf, buf_len, max_lba, block_size, 0, 0, 0, 0, 0, 0, 0);
+}
+
+/* read & write */
+int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
+int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
 
 #endif

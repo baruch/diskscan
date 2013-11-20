@@ -2,6 +2,12 @@
 
 #include <memory.h>
 
+static inline uint16_t scsi_get_16(unsigned char *buf, int idx)
+{
+        return (buf[idx+0] << 8) |
+               (buf[idx+1]);
+}
+
 static inline uint32_t scsi_get_24(unsigned char *buf, int idx)
 {
         return (buf[idx+0] << 16) |
@@ -89,6 +95,9 @@ static bool parse_sense_fixed(unsigned char *sense, int sense_len, sense_info_t 
 
         parse_sense_key_specific(sense + 15, info);
 
+        if (sense_len >= 21)
+            info->vendor_unique_error = scsi_get_16(sense, 20);
+
         //uint8_t additional_sense_len = sense[7];
 
         return true;
@@ -173,6 +182,11 @@ static bool parse_sense_descriptor(unsigned char *sense, int sense_len, sense_in
                         case 0x0A: // Progress indication
                                 break;
                         case 0x0B: // User data segment referral
+                                break;
+                        case 0x80: // Vendor Unique Unit Error
+                                if (desc_len == 0x02) {
+                                    info->vendor_unique_error = scsi_get_16(sense, idx+2);
+                                }
                                 break;
                 }
         }
