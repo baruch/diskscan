@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
-bool parse_inquiry(char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor, scsi_model_t model,
+bool parse_inquiry(unsigned char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor, scsi_model_t model,
                    scsi_fw_revision_t revision, scsi_serial_t serial)
 {
         *device_type = -1;
