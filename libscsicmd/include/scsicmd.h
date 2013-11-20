@@ -136,7 +136,7 @@ bool scsi_parse_sense(unsigned char *sense, int sense_len, sense_info_t *info);
 /* inquiry */
 int cdb_inquiry(unsigned char *cdb, bool evpd, char page_code, uint16_t alloc_len);
 static inline int cdb_inquiry_simple(unsigned char *cdb, uint16_t alloc_len) { return cdb_inquiry(cdb, 0, 0, alloc_len); }
-bool parse_inquiry(char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor,
+bool parse_inquiry(unsigned char *buf, unsigned buf_len, int *device_type, scsi_vendor_t vendor,
                    scsi_model_t model, scsi_fw_revision_t rev, scsi_serial_t serial);
 
 /* read capacity */
