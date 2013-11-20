@@ -65,6 +65,10 @@ Scan mode can be either \fBseq\fR or \fBrandom\fR, random reduces the chance tha
 disk will be able spend time to recover data before we try to access a sector
 but the seeks add noise to the latency measurement. Sequential test is the
 default and random test is still experimental with regard to its usefulness.
+.PP
+\fB-e <size>\fR, \fB--size <size>\fR
+Set the size in which the scan will be done, this must be a multiple of the sector size
+which is normally 512 bytes.
 .SH "SEE ALSO"
 \fBbadblocks\fR(1), \fBfsck\fR(1)
 .SH AUTHOR
