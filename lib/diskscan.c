@@ -50,6 +50,18 @@ struct scan_state {
 	int progress_full;
 };
 
+const char *conclusion_to_str(enum conclusion conclusion)
+{
+	switch (conclusion) {
+		case CONCLUSION_FAILED: return "failed";
+		case CONCLUSION_PASSED: return "passed";
+		case CONCLUSION_SCAN_PROBLEM: return "scan_problem";
+		case CONCLUSION_ABORTED: return "scan_aborted";
+	}
+
+	return "unknown";
+}
+
 enum scan_mode str_to_scan_mode(const char *s)
 {
 	if (strcasecmp(s, "seq") == 0 || strcasecmp(s, "sequential") == 0)
@@ -266,7 +278,7 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	}
 
 	unsigned hist_idx = 0;
-	while (t_msec >= histogram_time[hist_idx] && hist_idx < ARRAY_SIZE(disk->histogram) - 1) {
+	while (t_msec >= histogram_time[hist_idx].top_val && hist_idx < ARRAY_SIZE(disk->histogram) - 1) {
 		hist_idx++;
 	}
 	disk->histogram[hist_idx]++;
@@ -401,6 +413,33 @@ static void set_realtime(bool realtime)
 		sched_setscheduler(0, SCHED_OTHER, &param);
 }
 
+static enum conclusion conclusion_calc(disk_t *disk)
+{
+	unsigned i;
+	uint64_t total;
+
+	if (disk->num_errors > 0)
+		return CONCLUSION_FAILED;
+
+	for (i = 0, total = 0; i < ARRAY_SIZE(histogram_time); i++) {
+		total += disk->histogram[i];
+	}
+
+	const double total_d = (double)total;
+	for (i = 0; i < ARRAY_SIZE(histogram_time); i++) {
+		double percent = ((double)disk->histogram[i]) / total_d;
+		if (percent > histogram_time[i].percent_bad) {
+			const uint64_t low_end = i == 0 ? 0 : histogram_time[i-1].top_val;
+			const uint64_t high_end = histogram_time[i].top_val;
+			ERROR("Disk has %"PRIu64" (%f%%) IOs from %"PRIu64" to %"PRIu64" msecs, it is a bad disk!", disk->histogram[i], percent, low_end, high_end);
+			return CONCLUSION_FAILED;
+		}
+	}
+
+	VERBOSE("Disk has passed the test");
+	return CONCLUSION_PASSED;
+}
+
 int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 {
 	disk->run = 1;
@@ -411,6 +450,8 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	struct timespec ts_start;
 	struct timespec ts_end;
 	time_t scan_time;
+
+	disk->conclusion = CONCLUSION_SCAN_PROBLEM;
 
 	if (data_size % disk->sector_size != 0) {
 		data_size -= data_size % disk->sector_size;
@@ -462,6 +503,9 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 
 	if (!disk->run) {
 		INFO("Disk scan interrupted");
+		disk->conclusion = CONCLUSION_ABORTED;
+	} else {
+		disk->conclusion = conclusion_calc(disk);
 	}
 	report_scan_done(disk);
 

@@ -225,7 +225,7 @@ static void histogram_output(FILE *f, uint64_t *histogram, int histogram_len, in
 			fprintf(f, ",\n");
 		add_indent(f, indent+1);
 		fprintf(f, "{");
-		fprintf(f, "\"latency_msec\": %24"PRIu64, histogram_time[i]);
+		fprintf(f, "\"latency_msec\": %24"PRIu64, histogram_time[i].top_val);
 		fprintf(f, ", \"count\": %24"PRIu64, histogram[i]);
 		fprintf(f, "}");
 	}
@@ -255,7 +255,7 @@ static void latency_output(FILE *f, latency_t *latency, int latency_len, int ind
 	}
 	fprintf(f, "\n");
 
-	add_indent(f, indent); fprintf(f, "]\n");
+	add_indent(f, indent); fprintf(f, "],\n");
 }
 
 void data_log_end(data_log_t *log, disk_t *disk)
@@ -265,7 +265,6 @@ void data_log_end(data_log_t *log, disk_t *disk)
 
 	fprintf(log->f, "\n");
 	add_indent(log->f, 2); fprintf(log->f, "],\n");
-	// TODO: Output the latency histogram data
 	// TODO: Output SMART Information
 	// TODO: Output Log Page information
 
@@ -273,6 +272,7 @@ void data_log_end(data_log_t *log, disk_t *disk)
 
 	histogram_output(log->f, disk->histogram, ARRAY_SIZE(disk->histogram), 2);
 	latency_output(log->f, disk->latency_graph, disk->latency_graph_len, 2);
+	add_indent(log->f, 2); fprintf(log->f, "\"conclusion\": \"%s\"\n", conclusion_to_str(disk->conclusion));
 
 	add_indent(log->f, 1); fprintf(log->f, "}\n");
 	fprintf(log->f, "}\n");

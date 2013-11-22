@@ -7,12 +7,44 @@
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
 
-static const uint64_t histogram_time[] = {1, 10, 100, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 25000, 30000, UINT64_MAX};
+struct histogram_def_t {
+	uint64_t top_val;
+	double percent_bad;
+};
+
+static const struct histogram_def_t histogram_time[] = {
+	{.top_val =    1, .percent_bad = 100.0},
+	{.top_val =   10, .percent_bad = 100.0},
+	{.top_val =  100, .percent_bad = 100.0},
+	{.top_val =  500, .percent_bad = 100.0},
+	{.top_val = 1000, .percent_bad = 10.0},
+	{.top_val = 2000, .percent_bad = 1.0},
+	{.top_val = 3000, .percent_bad = 1.0},
+	{.top_val = 4000, .percent_bad = 1.0},
+	{.top_val = 5000, .percent_bad = 1.0},
+    {.top_val = 6000, .percent_bad = 0.5},
+    {.top_val = 7000, .percent_bad = 0.5},
+    {.top_val = 8000, .percent_bad = 0.5},
+    {.top_val = 9000, .percent_bad = 0.5},
+    {.top_val = 10000, .percent_bad = 0.1},
+    {.top_val = 15000, .percent_bad = 0.01},
+    {.top_val = 20000, .percent_bad = 0.0},
+    {.top_val = 25000, .percent_bad = 0.0},
+    {.top_val = 30000, .percent_bad = 0.0},
+    {.top_val = UINT64_MAX, .percent_bad = 0.0}
+};
 
 enum scan_mode {
 	SCAN_MODE_UNKNOWN,
 	SCAN_MODE_SEQ,
 	SCAN_MODE_RANDOM,
+};
+
+enum conclusion {
+	CONCLUSION_SCAN_PROBLEM, /* Problem in the scan, no real conclusion */
+	CONCLUSION_ABORTED, /* Scan aborted by used */
+	CONCLUSION_PASSED,  /* Disk looks fine */
+	CONCLUSION_FAILED,  /* Disk looks bad */
 };
 
 typedef struct latency_t {
@@ -50,6 +82,7 @@ typedef struct disk_t {
 	uint64_t histogram[ARRAY_SIZE(histogram_time)];
 	unsigned latency_graph_len;
 	latency_t *latency_graph;
+	enum conclusion conclusion;
 
 	data_log_raw_t data_raw;
 	data_log_t data_log;
@@ -61,6 +94,7 @@ int disk_close(disk_t *disk);
 void disk_scan_stop(disk_t *disk);
 
 enum scan_mode str_to_scan_mode(const char *s);
+const char *conclusion_to_str(enum conclusion conclusion);
 
 /* Implemented by the user (gui/cli) */
 void report_progress(disk_t *disk, int percent_part, int percent_full);

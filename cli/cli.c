@@ -153,12 +153,14 @@ void report_scan_done(disk_t *disk)
 	for (hist_idx = 0; hist_idx < ARRAY_SIZE(disk->histogram); hist_idx++)
 	{
 		if (hist_idx != ARRAY_SIZE(disk->histogram)-1)
-			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx], disk->histogram[hist_idx]);
+			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx].top_val, disk->histogram[hist_idx]);
 		else
 			printf("%8s: %" PRIu64 "\n", "above that", disk->histogram[hist_idx]);
 	}
 
 	print_latency(disk->latency_graph, disk->latency_graph_len);
+
+	printf("Conclusion: %s\n", conclusion_to_str(disk->conclusion));
 }
 
 static unsigned str_to_scan_size(const char *str)
