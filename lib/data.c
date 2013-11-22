@@ -198,7 +198,6 @@ void data_log_start(data_log_t *log, const char *filename, disk_t *disk)
 	log->is_first = true;
 
 	fprintf(log->f, "{\n");
-	add_indent(log->f, 1); time_output(log->f, "start_time"); fprintf(log->f, ",\n");
 	add_indent(log->f, 1); fprintf(log->f, "\"disk\": ");
 	disk_output(log->f, disk, 2);
 	fprintf(log->f, ",\n");
@@ -209,21 +208,73 @@ void data_log_start(data_log_t *log, const char *filename, disk_t *disk)
 
 	// TODO: Output Disk mode page info
 	// TODO: Output Disk SATA configuration
-	add_indent(log->f, 1); fprintf(log->f, "\"events\": [\n");
+
+	add_indent(log->f, 1); fprintf(log->f, "\"scan\": {\n");
+	add_indent(log->f, 2); time_output(log->f, "start_time"); fprintf(log->f, ",\n");
+	add_indent(log->f, 2); fprintf(log->f, "\"events\": [\n");
 }
 
-void data_log_end(data_log_t *log)
+static void histogram_output(FILE *f, uint64_t *histogram, int histogram_len, int indent)
+{
+	//uint64_t histogram[ARRAY_SIZE(histogram_time)];
+	add_indent(f, indent); fprintf(f, "\"histogram\": [\n");
+
+	int i;
+	for (i = 0; i < histogram_len; i++) {
+		if (i != 0)
+			fprintf(f, ",\n");
+		add_indent(f, indent+1);
+		fprintf(f, "{");
+		fprintf(f, "\"latency_msec\": %24"PRIu64, histogram_time[i]);
+		fprintf(f, ", \"count\": %24"PRIu64, histogram[i]);
+		fprintf(f, "}");
+	}
+	fprintf(f, "\n");
+
+	add_indent(f, indent); fprintf(f, "],\n");
+}
+
+static void latency_output(FILE *f, latency_t *latency, int latency_len, int indent)
+{
+	//unsigned latency_graph_len;
+	//latency_t *latency_graph;
+	add_indent(f, indent); fprintf(f, "\"latencies\": [\n");
+
+	int i;
+	for (i = 0; i < latency_len; i++) {
+		if (i != 0)
+			fprintf(f, ",\n");
+		add_indent(f, indent+1);
+		fprintf(f, "{");
+		fprintf(f, "\"start_sector\": %16"PRIu64, latency[i].start_sector);
+		fprintf(f, ", \"end_sector\": %16"PRIu64, latency[i].end_sector);
+		fprintf(f, ", \"latency_min_msec\": %8u", latency[i].latency_min_msec);
+		fprintf(f, ", \"latency_max_msec\": %8u", latency[i].latency_max_msec);
+		fprintf(f, ", \"latency_median_msec\": %8u", latency[i].latency_median_msec);
+		fprintf(f, "}");
+	}
+	fprintf(f, "\n");
+
+	add_indent(f, indent); fprintf(f, "]\n");
+}
+
+void data_log_end(data_log_t *log, disk_t *disk)
 {
 	if (log == NULL || log->f == NULL)
 		return;
 
 	fprintf(log->f, "\n");
-	add_indent(log->f, 1); fprintf(log->f, "],\n");
+	add_indent(log->f, 2); fprintf(log->f, "],\n");
 	// TODO: Output the latency histogram data
 	// TODO: Output SMART Information
 	// TODO: Output Log Page information
 
-	add_indent(log->f, 1); time_output(log->f, "end_time"); fprintf(log->f, "\n");
+	add_indent(log->f, 2); time_output(log->f, "end_time"); fprintf(log->f, ",\n");
+
+	histogram_output(log->f, disk->histogram, ARRAY_SIZE(disk->histogram), 2);
+	latency_output(log->f, disk->latency_graph, disk->latency_graph_len, 2);
+
+	add_indent(log->f, 1); fprintf(log->f, "}\n");
 	fprintf(log->f, "}\n");
 }
 

@@ -72,6 +72,6 @@ void report_scan_done(disk_t *disk);
 void data_log_raw_start(data_log_raw_t *log_raw, const char *filename, disk_t *disk);
 void data_log_raw_end(data_log_raw_t *log_raw);
 void data_log_start(data_log_t *log, const char *filename, disk_t *disk);
-void data_log_end(data_log_t *log);
+void data_log_end(data_log_t *log, disk_t *disk);
 
 #endif

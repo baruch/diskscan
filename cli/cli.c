@@ -335,7 +335,7 @@ int diskscan_cli(int argc, char **argv)
 	if (opts.data_log_raw_name)
 		data_log_raw_end(&disk.data_raw);
 	if (opts.data_log_name)
-		data_log_end(&disk.data_log);
+		data_log_end(&disk.data_log, &disk);
 
 	disk_close(&disk);
 	return ret;
