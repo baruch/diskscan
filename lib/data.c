@@ -289,6 +289,6 @@ void data_log(data_log_t *log, uint64_t lba, uint32_t len, io_result_t *io_res, 
 		else
 			log->is_first = false;
 
-		data_log_event(log->f, 2, lba, len, io_res, t_nsec);
+		data_log_event(log->f, 3, lba, len, io_res, t_nsec);
 	}
 }
