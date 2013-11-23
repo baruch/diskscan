@@ -68,10 +68,10 @@ typedef struct data_log_t {
 typedef struct disk_t {
 	disk_dev_t dev;
 	char path[128];
-	char vendor[32];
-	char model[32];
-	char fw_rev[32];
-	char serial[32];
+	char vendor[64];
+	char model[64];
+	char fw_rev[64];
+	char serial[64];
 	bool is_ata;
 	uint64_t num_bytes;
 	uint64_t sector_size;
