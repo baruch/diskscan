@@ -64,7 +64,7 @@ static inline char nibble_to_hex(unsigned char nibble)
 
 static void system_identifier_to_json(system_identifier_t *system_id, char *buf, int buf_len)
 {
-	int len = snprintf(buf, buf_len, "{ \"system\": \"%s\", \"chassis\": \"%s\", \"baseboard\": \"%s\", \"mac\": \"%s\", \"os\": \"%s\" }",
+	int len = snprintf(buf, buf_len, "{ \"System\": \"%s\", \"Chassis\": \"%s\", \"BaseBoard\": \"%s\", \"Mac\": \"%s\", \"OS\": \"%s\" }",
 			system_id->system, system_id->chassis, system_id->baseboard, system_id->mac, system_id->os);
 	// If we failed we should at least keep it a valid json
 	if (len >= buf_len || len <= 0)
@@ -97,7 +97,7 @@ static const char *sense_info_to_json(struct sense_info_t *info, unsigned char *
 	}
 	sense_hex[j] = 0;
 
-	snprintf(buf, 2048, "{\"sense_key\": %u, \"asc\": %u, \"ascq\": %u, \"fru_code\": %u, \"vendor_code\": %u, \"raw\": \"%s\"}",
+	snprintf(buf, 2048, "{\"SenseKey\": %u, \"Asc\": %u, \"Ascq\": %u, \"FruCode\": %u, \"VendorCode\": %u, \"Hex\": \"%s\"}",
 			info->sense_key, info->asc, info->ascq,
 			info->fru_code_valid ? info->fru_code : 0,
 			info->vendor_unique_error,
@@ -119,21 +119,21 @@ static inline void add_indent(FILE *f, int indent)
 static void disk_output(FILE *f, disk_t *disk, int indent)
 {
 	fprintf(f, "{\n");
-	add_indent(f, indent); fprintf(f, "\"vendor\": \"%s\",\n", disk->vendor);
-	add_indent(f, indent); fprintf(f, "\"model\": \"%s\",\n", disk->model);
-	add_indent(f, indent); fprintf(f, "\"fw_rev\": \"%s\",\n", disk->fw_rev);
-	add_indent(f, indent); fprintf(f, "\"serial\": \"%s\",\n", disk->serial);
-	add_indent(f, indent); fprintf(f, "\"num_sectors\": \"%"PRIu64"\",\n", disk->num_bytes / disk->sector_size);
-	add_indent(f, indent); fprintf(f, "\"sector_size\": \"%"PRIu64"\"\n", disk->sector_size);
+	add_indent(f, indent); fprintf(f, "\"Vendor\": \"%s\",\n", disk->vendor);
+	add_indent(f, indent); fprintf(f, "\"Model\": \"%s\",\n", disk->model);
+	add_indent(f, indent); fprintf(f, "\"FwRev\": \"%s\",\n", disk->fw_rev);
+	add_indent(f, indent); fprintf(f, "\"Serial\": \"%s\",\n", disk->serial);
+	add_indent(f, indent); fprintf(f, "\"NumSectors\": %"PRIu64",\n", disk->num_bytes / disk->sector_size);
+	add_indent(f, indent); fprintf(f, "\"SectorSize\": %"PRIu64"\n", disk->sector_size);
 	add_indent(f, indent); fprintf(f, "}");
 }
 
 static void data_log_event(FILE *f, int indent, uint64_t lba, uint32_t len, io_result_t *io_res, uint32_t t_nsec)
 {
-	add_indent(f, indent); fprintf(f, "{\"lba\": %16"PRIu64", \"len\": %8u, \"latency_nsec\": %8u, ", lba, len, t_nsec);
-	fprintf(f, "\"data\": \"%s\", ", result_data_to_name(io_res->data));
-	fprintf(f, "\"error\": \"%s\", ", result_error_to_name(io_res->error));
-	fprintf(f, "\"sense\": %s", sense_info_to_json(&io_res->info, io_res->sense, io_res->sense_len));
+	add_indent(f, indent); fprintf(f, "{\"LBA\": %16"PRIu64", \"Len\": %8u, \"LatencyNSec\": %8u, ", lba, len, t_nsec);
+	fprintf(f, "\"Data\": \"%s\", ", result_data_to_name(io_res->data));
+	fprintf(f, "\"Error\": \"%s\", ", result_error_to_name(io_res->error));
+	fprintf(f, "\"Sense\": %s", sense_info_to_json(&io_res->info, io_res->sense, io_res->sense_len));
 	fprintf(f, "}");
 }
 
@@ -147,11 +147,11 @@ void data_log_raw_start(data_log_raw_t *log_raw, const char *filename, disk_t *d
 	fprintf(log_raw->f, "{\n");
 
 	// Information about the disk itself
-	add_indent(log_raw->f, 1); fprintf(log_raw->f, "\"disk\": ");
+	add_indent(log_raw->f, 1); fprintf(log_raw->f, "\"Disk\": ");
 	disk_output(log_raw->f, disk, 2);
 	fprintf(log_raw->f, ",\n");
 
-	add_indent(log_raw->f, 1); fprintf(log_raw->f, "\"raw\": [\n");
+	add_indent(log_raw->f, 1); fprintf(log_raw->f, "\"Raw\": [\n");
 }
 
 void data_log_raw_end(data_log_raw_t *log_raw)
@@ -198,26 +198,26 @@ void data_log_start(data_log_t *log, const char *filename, disk_t *disk)
 	log->is_first = true;
 
 	fprintf(log->f, "{\n");
-	add_indent(log->f, 1); fprintf(log->f, "\"disk\": ");
+	add_indent(log->f, 1); fprintf(log->f, "\"Disk\": ");
 	disk_output(log->f, disk, 2);
 	fprintf(log->f, ",\n");
 
-	add_indent(log->f, 1); fprintf(log->f, "\"machine\": ");
+	add_indent(log->f, 1); fprintf(log->f, "\"Machine\": ");
 	system_id_output(log->f);
 	fprintf(log->f, ",\n");
 
 	// TODO: Output Disk mode page info
 	// TODO: Output Disk SATA configuration
 
-	add_indent(log->f, 1); fprintf(log->f, "\"scan\": {\n");
-	add_indent(log->f, 2); time_output(log->f, "start_time"); fprintf(log->f, ",\n");
-	add_indent(log->f, 2); fprintf(log->f, "\"events\": [\n");
+	add_indent(log->f, 1); fprintf(log->f, "\"Scan\": {\n");
+	add_indent(log->f, 2); time_output(log->f, "StartTime"); fprintf(log->f, ",\n");
+	add_indent(log->f, 2); fprintf(log->f, "\"Events\": [\n");
 }
 
 static void histogram_output(FILE *f, uint64_t *histogram, int histogram_len, int indent)
 {
 	//uint64_t histogram[ARRAY_SIZE(histogram_time)];
-	add_indent(f, indent); fprintf(f, "\"histogram\": [\n");
+	add_indent(f, indent); fprintf(f, "\"Histogram\": [\n");
 
 	int i;
 	for (i = 0; i < histogram_len; i++) {
@@ -225,8 +225,8 @@ static void histogram_output(FILE *f, uint64_t *histogram, int histogram_len, in
 			fprintf(f, ",\n");
 		add_indent(f, indent+1);
 		fprintf(f, "{");
-		fprintf(f, "\"latency_msec\": %24"PRIu64, histogram_time[i].top_val);
-		fprintf(f, ", \"count\": %24"PRIu64, histogram[i]);
+		fprintf(f, "\"LatencyMsec\": %24"PRIu64, histogram_time[i].top_val);
+		fprintf(f, ", \"Count\": %24"PRIu64, histogram[i]);
 		fprintf(f, "}");
 	}
 	fprintf(f, "\n");
@@ -238,7 +238,7 @@ static void latency_output(FILE *f, latency_t *latency, int latency_len, int ind
 {
 	//unsigned latency_graph_len;
 	//latency_t *latency_graph;
-	add_indent(f, indent); fprintf(f, "\"latencies\": [\n");
+	add_indent(f, indent); fprintf(f, "\"Latencies\": [\n");
 
 	int i;
 	for (i = 0; i < latency_len; i++) {
@@ -246,11 +246,11 @@ static void latency_output(FILE *f, latency_t *latency, int latency_len, int ind
 			fprintf(f, ",\n");
 		add_indent(f, indent+1);
 		fprintf(f, "{");
-		fprintf(f, "\"start_sector\": %16"PRIu64, latency[i].start_sector);
-		fprintf(f, ", \"end_sector\": %16"PRIu64, latency[i].end_sector);
-		fprintf(f, ", \"latency_min_msec\": %8u", latency[i].latency_min_msec);
-		fprintf(f, ", \"latency_max_msec\": %8u", latency[i].latency_max_msec);
-		fprintf(f, ", \"latency_median_msec\": %8u", latency[i].latency_median_msec);
+		fprintf(f, "\"StartSector\": %16"PRIu64, latency[i].start_sector);
+		fprintf(f, ", \"EndSector\": %16"PRIu64, latency[i].end_sector);
+		fprintf(f, ", \"LatencyMinMsec\": %8u", latency[i].latency_min_msec);
+		fprintf(f, ", \"LatencyMaxMsec\": %8u", latency[i].latency_max_msec);
+		fprintf(f, ", \"LatencyMedianMsec\": %8u", latency[i].latency_median_msec);
 		fprintf(f, "}");
 	}
 	fprintf(f, "\n");
@@ -268,11 +268,11 @@ void data_log_end(data_log_t *log, disk_t *disk)
 	// TODO: Output SMART Information
 	// TODO: Output Log Page information
 
-	add_indent(log->f, 2); time_output(log->f, "end_time"); fprintf(log->f, ",\n");
+	add_indent(log->f, 2); time_output(log->f, "EndTime"); fprintf(log->f, ",\n");
 
 	histogram_output(log->f, disk->histogram, ARRAY_SIZE(disk->histogram), 2);
 	latency_output(log->f, disk->latency_graph, disk->latency_graph_len, 2);
-	add_indent(log->f, 2); fprintf(log->f, "\"conclusion\": \"%s\"\n", conclusion_to_str(disk->conclusion));
+	add_indent(log->f, 2); fprintf(log->f, "\"Conclusion\": \"%s\"\n", conclusion_to_str(disk->conclusion));
 
 	add_indent(log->f, 1); fprintf(log->f, "}\n");
 	fprintf(log->f, "}\n");
