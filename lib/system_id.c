@@ -83,12 +83,19 @@ static void mac_read(char *buf, int len)
 	char data[1024];
 	int success = 0;
 
+	buf[0] = 0;
+
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-	if (sock == -1) { /* handle error*/ };
+	if (sock == -1) {
+		return;
+	};
 
 	ifc.ifc_len = sizeof(data);
 	ifc.ifc_buf = data;
-	if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) { /* handle error */ }
+	if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) {
+		/* handle error */
+		goto Exit;
+	}
 
 	struct ifreq* it = ifc.ifc_req;
 	const struct ifreq* const end = it + (ifc.ifc_len / sizeof(struct ifreq));
@@ -111,6 +118,9 @@ static void mac_read(char *buf, int len)
 	} else {
 		memset(buf, 0, len);
 	}
+
+Exit:
+	close(sock);
 }
 
 static void os_read(char *buf, int len)
