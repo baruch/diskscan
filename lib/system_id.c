@@ -35,7 +35,7 @@ static bool cmd_str(const char *cmd, char *buf, int len)
 		return false;
 
 	char *ret = fgets(buf, len, f);
-	fclose(f);
+	pclose(f);
 	return ret != NULL;
 }
 
