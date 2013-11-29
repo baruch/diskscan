@@ -62,6 +62,16 @@ static inline char nibble_to_hex(unsigned char nibble)
 		return 'A' + nibble - 10;
 }
 
+static inline void buf_to_hex(unsigned char *buf, unsigned buf_len, unsigned char *out_buf, unsigned out_buf_len)
+{
+	for (; buf_len > 0 && out_buf_len >= 3; buf_len--, out_buf_len -= 2) {
+		*(out_buf++) = nibble_to_hex(*buf >> 4);
+		*(out_buf++) = nibble_to_hex(*buf & 0x0F);
+		buf++;
+	}
+	*out_buf = 0;
+}
+
 static void system_identifier_to_json(system_identifier_t *system_id, char *buf, int buf_len)
 {
 	int len = snprintf(buf, buf_len, "{ \"System\": \"%s\", \"Chassis\": \"%s\", \"BaseBoard\": \"%s\", \"Mac\": \"%s\", \"OS\": \"%s\" }",
@@ -88,14 +98,9 @@ static void system_id_output(FILE *f)
 static const char *sense_info_to_json(struct sense_info_t *info, unsigned char *sense, unsigned sense_len)
 {
 	static char buf[2048];
-	char sense_hex[sizeof(sense) * 2 + 1];
-	unsigned i, j;
+	unsigned char sense_hex[sizeof(sense) * 2 + 1];
 
-	for (i = 0, j = 0; i < sense_len; i++) {
-		sense_hex[j++] = nibble_to_hex(sense[i] >> 4);
-		sense_hex[j++] = nibble_to_hex(sense[i] & 0x0F);
-	}
-	sense_hex[j] = 0;
+	buf_to_hex(sense, sense_len, sense_hex, sizeof(sense_hex));
 
 	snprintf(buf, 2048, "{\"SenseKey\": %u, \"Asc\": %u, \"Ascq\": %u, \"FruCode\": %u, \"VendorCode\": %u, \"Hex\": \"%s\"}",
 			info->sense_key, info->asc, info->ascq,
@@ -125,6 +130,11 @@ static void disk_output(FILE *f, disk_t *disk, int indent)
 	add_indent(f, indent); fprintf(f, "\"Serial\": \"%s\",\n", disk->serial);
 	add_indent(f, indent); fprintf(f, "\"NumSectors\": %"PRIu64",\n", disk->num_bytes / disk->sector_size);
 	add_indent(f, indent); fprintf(f, "\"SectorSize\": %"PRIu64"\n", disk->sector_size);
+	if (disk->is_ata && disk->ata_buf_len > 0) {
+		unsigned char ata_hex[512*2+1];
+		buf_to_hex(disk->ata_buf, disk->ata_buf_len, ata_hex, sizeof(ata_hex));
+		add_indent(f, indent); fprintf(f, "\"AtaIdentifyRaw\": \"%s\",\n", ata_hex);
+	}
 	add_indent(f, indent); fprintf(f, "}");
 }
 

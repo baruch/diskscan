@@ -115,7 +115,7 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 	disk->num_bytes = new_bytes;
 #endif
 
-	if (disk_dev_identify(&disk->dev, disk->vendor, disk->model, disk->fw_rev, disk->serial, &disk->is_ata) < 0) {
+	if (disk_dev_identify(&disk->dev, disk->vendor, disk->model, disk->fw_rev, disk->serial, &disk->is_ata, disk->ata_buf, &disk->ata_buf_len) < 0) {
 		ERROR("Can't identify disk for path %s: %m", path);
 		goto Error;
 	}

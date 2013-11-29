@@ -272,7 +272,7 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 }
 
 
-int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata)
+int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata, unsigned char *ata_buf, unsigned *ata_buf_len)
 {
 	unsigned char cdb[32];
 	unsigned char buf[512];
@@ -284,6 +284,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	io_result_t io_res;
 
 	*is_ata = false;
+	*ata_buf_len = 0;
 	memset(buf, 0, sizeof(buf));
 
 	cdb_len = cdb_inquiry_simple(cdb, sizeof(buf));
@@ -322,6 +323,9 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	strtrim(fw_rev);
 	ata_get_ata_identify_serial_number((char*)buf, serial);
 	strtrim(serial);
+
+	memcpy(ata_buf, buf, buf_read);
+	*ata_buf_len = buf_read;
 
 	return 0;
 }
