@@ -28,7 +28,7 @@ bool parse_inquiry(unsigned char *buf, unsigned buf_len, int *device_type, scsi_
         revision[0] = 0;
         serial[0] = 0;
 
-        if (buf_len < 44)
+        if (buf_len < 32)
                 return false;
 
         unsigned char fmt = buf[3] & 0xf; 
