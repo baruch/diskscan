@@ -389,7 +389,10 @@ static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uin
 		progress_calc(disk, state, data_size);
 
 		VVVERBOSE("Scanning at offset %"PRIu64" index %u", offset, i);
-		uint64_t remainder = base_offset + state->latency_stride * disk->sector_size - offset;
+		uint64_t stride_end = base_offset + state->latency_stride * disk->sector_size;
+		if (stride_end > disk->num_bytes)
+			stride_end = disk->num_bytes;
+		uint64_t remainder = stride_end - offset;
 		if (remainder < data_size) {
 			data_size = remainder;
 			VERBOSE("Last part scanning size %"PRIu64, data_size);
