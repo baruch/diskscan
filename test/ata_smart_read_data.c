@@ -19,6 +19,7 @@
 #include "main.h"
 #include <stdio.h>
 #include <scsi/sg.h>
+#include <inttypes.h>
 
 void do_command(int fd)
 {
@@ -53,4 +54,22 @@ void do_command(int fd)
 	
 	printf("Response Dump:\n");
 	response_dump(buf, sizeof(buf));
+
+
+	printf("Page checksum read: %02X\n", ata_get_ata_smart_read_data_checksum(buf));
+	printf("Page checksum calc: %02X\n", ata_calc_ata_smart_read_data_checksum(buf));
+	printf("Page checksum matches: %s\n", ata_check_ata_smart_read_data_checksum(buf) ? "true" : "false");
+	printf("Page version: %04Xh\n", ata_get_ata_smart_read_data_version(buf));
+	if (ata_get_ata_smart_read_data_version(buf) != 0x10) {
+		printf("Unknown page version, only known version is 10h\n");
+		return;
+	}
+
+	ata_smart_attr_t attrs[MAX_SMART_ATTRS];
+	int num_attrs = ata_parse_ata_smart_read_data(buf, attrs, MAX_SMART_ATTRS);
+	int i;
+	for (i = 0; i < num_attrs; i++) {
+		const ata_smart_attr_t *attr = &attrs[i];
+		printf("Attribute #%2d: id %3u status %04X val %3u min %3u raw %"PRIu64"\n", i, attr->id, attr->status, attr->value, attr->min, attr->raw);
+	}
 }
