@@ -8,3 +8,6 @@
 tags
 include/arch-internal.h
 arch/arch.c
+coverity-check
+TODO
+*.log
