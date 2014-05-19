@@ -166,11 +166,16 @@ static inline int cdb_ata_smart_read_data(unsigned char *cdb)
 	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD0, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
 }
 
+
+static inline int cdb_ata_smart_read_threshold(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD1, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
+}
+
 static inline int cdb_ata_check_power_mode(unsigned char *cdb)
 {
 	return cdb_ata_passthrough_12(cdb, 0xE5, 0, 0, 0, PT_PROTO_NON_DATA, true, 1);
 }
-
 
 /* Parse ATA SMART READ DATA results */
 #define MAX_SMART_ATTRS 30
@@ -182,6 +187,11 @@ typedef struct ata_smart_attr {
 	uint8_t threshold;
 	uint64_t raw;
 } ata_smart_attr_t;
+
+typedef struct ata_smart_thresh {
+	uint8_t id;
+	uint8_t threshold;
+} ata_smart_thresh_t;
 
 static inline uint8_t ata_calc_ata_smart_read_data_checksum(const unsigned char *buf) {
 	unsigned val = 0;
@@ -202,6 +212,6 @@ static inline bool ata_check_ata_smart_read_data_checksum(const unsigned char *b
 uint16_t ata_get_ata_smart_read_data_version(const unsigned char *buf);
 
 int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *attrs, int max_attrs);
-int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_attr_t *attr, int max_attrs);
+int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t *attr, int max_attrs);
 
 #endif

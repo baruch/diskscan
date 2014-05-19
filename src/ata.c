@@ -109,3 +109,28 @@ int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *at
 
 	return j;
 }
+
+int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t *attrs, int max_attrs)
+{
+	if (!ata_check_ata_smart_read_data_checksum(buf))
+		return -1;
+
+	if (ata_get_ata_smart_read_data_version(buf) != 0x0010)
+		return -1;
+
+	int i, j;
+
+	for (i = 0, j = 0; i < MAX_SMART_ATTRS; i++) {
+		const unsigned char *raw_attr = buf + 2 + 12*i;
+		ata_smart_thresh_t *attr = &attrs[j];
+
+		attr->id = raw_attr[0];
+		if (attr->id == 0) // Skip an invalid attribute
+			continue;
+		attr->threshold = raw_attr[1];
+
+		j++;
+	}
+
+	return j;
+}
