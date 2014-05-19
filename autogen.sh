@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-aclocal
-autoconf
+aclocal -I m4
+autoconf -I m4
