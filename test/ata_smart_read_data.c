@@ -17,6 +17,7 @@
 #include "ata.h"
 #include "ata_parse.h"
 #include "main.h"
+#include "smartdb.h"
 #include <stdio.h>
 #include <scsi/sg.h>
 #include <inttypes.h>
@@ -53,14 +54,6 @@ bool read_data(int fd, unsigned char *buf, int buf_len)
 		return false;
 	}
 
-	ata_smart_attr_t attrs[MAX_SMART_ATTRS];
-	int num_attrs = ata_parse_ata_smart_read_data(buf, attrs, MAX_SMART_ATTRS);
-	int i;
-	for (i = 0; i < num_attrs; i++) {
-		const ata_smart_attr_t *attr = &attrs[i];
-		printf("Attribute #%2d: id %3u status %04X val %3u min %3u raw %"PRIu64"\n", i, attr->id, attr->status, attr->value, attr->min, attr->raw);
-	}
-
 	return true;
 }
 
@@ -95,15 +88,6 @@ bool read_threshold(int fd, unsigned char *buf, int buf_len)
 		printf("Unknown page version, only known version is 10h\n");
 		return false;
 	}
-
-	ata_smart_thresh_t attrs[MAX_SMART_ATTRS];
-	int num_attrs = ata_parse_ata_smart_read_thresh(buf, attrs, MAX_SMART_ATTRS);
-	int i;
-	for (i = 0; i < num_attrs; i++) {
-		const ata_smart_thresh_t *attr = &attrs[i];
-		printf("Attribute #%2d: id %3u threshold %3u\n", i, attr->id, attr->threshold);
-	}
-
 	return true;
 }
 
@@ -117,4 +101,27 @@ void do_command(int fd)
 
 	if (!read_threshold(fd, buf_thresh, sizeof(buf_thresh)))
 		return;
+
+	const smart_table_t *table = smart_table_for_disk(NULL, NULL, NULL);
+
+	ata_smart_attr_t attrs[MAX_SMART_ATTRS];
+	int num_attrs1 = ata_parse_ata_smart_read_data(buf_data, attrs, MAX_SMART_ATTRS);
+
+	ata_smart_thresh_t thresholds[MAX_SMART_ATTRS];
+	int num_attrs2 = ata_parse_ata_smart_read_thresh(buf_thresh, thresholds, MAX_SMART_ATTRS);
+
+
+	if (num_attrs1 != num_attrs2) {
+		printf("Number of attributes in data (%d) and thresholds (%d) do not match\n", num_attrs1, num_attrs2);
+		return;
+	}
+
+	printf("num attributes %d\n", num_attrs1);
+	int i;
+	for (i = 0; i < num_attrs1; i++) {
+		const ata_smart_attr_t *attr = &attrs[i];
+		const ata_smart_thresh_t *thresh = &thresholds[i];
+		const smart_attr_t *attr_type = smart_attr_for_id(table, attr->id);
+		printf("Attribute #%2d: id %3u %-40s status %04X val %3u min %3u thresh %3u raw %"PRIu64"\n", i, attr->id, attr_type ? attr_type->name : "Unknown", attr->status, attr->value, attr->min, thresh->threshold, attr->raw);
+	}
 }

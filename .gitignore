@@ -1,9 +1,11 @@
 *.o
 .*.d
 .redo
+.gdb_history
 tags
 libscsicmd.a
 include/ata_parse.h
+smartdb/smartdb_gen.c
 test/ata_identify
 test/ata_identify_dump.[ch]
 test/ata_smart_return_status
