@@ -17,7 +17,10 @@
     <name type="reallocations">Rellocation Event Count</name>
     <name type="pending_reallocations">Pending Sector Reallocation Count</name>
     <name>Off-Line Scan Uncorrecable Sector Count</name>
-    <name>Ultra DMA CRC Error Count</name>
+    <name>CRC Error Count</name>
+    <name>Total LBAs Written</name>
+    <name>Multi-zone Error Rate</name>
+    <name>Drive Calibration Retry Count</name>
   </names>
   <default>
     <!-- The below were added based on an HGST documentation and seem to be pretty universal -->
@@ -59,6 +62,10 @@
       <name>Spin Retry Count</name>
     </attr>
     <attr>
+      <id>11</id>
+      <name>Drive Calibration Retry Count</name>
+    </attr>
+    <attr>
       <id>12</id>
       <name>Device Power Cycle Count</name>
     </attr>
@@ -92,7 +99,15 @@
     </attr>
     <attr>
       <id>199</id>
-      <name>Ultra DMA CRC Error Count</name>
+      <name>CRC Error Count</name>
+    </attr>
+    <attr>
+      <id>200</id>
+      <name>Multi-zone Error Rate</name>
+    </attr>
+    <attr>
+      <id>241</id>
+      <name>Total LBAs Written</name>
     </attr>
   </default>
 </smartdb>
