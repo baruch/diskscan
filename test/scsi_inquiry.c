@@ -61,7 +61,7 @@ void do_command(int fd)
 		return;
 	}
 
-	printf("Device Type: %d\n", device_type);
+	printf("Device Type: %d - %s\n", device_type, scsi_device_type_name(device_type));
 	printf("Vendor: %s\n", vendor);
 	printf("Model: %s\n", model);
 	printf("Rev: %s\n", rev);
