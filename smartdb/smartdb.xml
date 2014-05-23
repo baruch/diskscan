@@ -14,7 +14,7 @@
     <name>Power Off Retract Count</name>
     <name>Load/Unload Cycle Count</name>
     <name type="temperature">Temperature</name>
-    <name type="reallocations">Rellocation Event Count</name>
+    <name type="reallocations">Reallocation Event Count</name>
     <name type="pending_reallocations">Pending Sector Reallocation Count</name>
     <name>Off-Line Scan Uncorrecable Sector Count</name>
     <name>CRC Error Count</name>
@@ -87,7 +87,7 @@
     </attr>
     <attr>
       <id>196</id>
-      <name>Rellocation Event Count</name>
+      <name>Reallocation Event Count</name>
     </attr>
     <attr>
       <id>197</id>
