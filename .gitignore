@@ -14,3 +14,4 @@ test/ata_check_power_mode
 test/sense_decode
 test/scsi_read_capacity_10
 test/scsi_read_capacity_16
+test/scsi_inquiry
