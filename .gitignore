@@ -15,3 +15,4 @@ test/sense_decode
 test/scsi_read_capacity_10
 test/scsi_read_capacity_16
 test/scsi_inquiry
+test/scsi_log_sense

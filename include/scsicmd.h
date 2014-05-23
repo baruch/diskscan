@@ -163,4 +163,7 @@ static inline bool parse_read_capacity_16_simple(unsigned char *buf, unsigned bu
 int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
 int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
 
+/* log sense */
+int cdb_log_sense(unsigned char *cdb, uint8_t page_code, uint16_t alloc_len);
+
 #endif
