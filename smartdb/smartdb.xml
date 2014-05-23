@@ -21,6 +21,11 @@
     <name>Total LBAs Written</name>
     <name>Multi-zone Error Rate</name>
     <name>Drive Calibration Retry Count</name>
+    <name>Free Fall Sensor</name>
+    <name>Total LBAs Read</name>
+    <name>Head Flying Hours</name>
+    <name>Hardware ECC Recovered</name>
+    <name>Read Soft Error Rate</name>
   </names>
   <default>
     <!-- The below were added based on an HGST documentation and seem to be pretty universal -->
@@ -70,6 +75,10 @@
       <name>Device Power Cycle Count</name>
     </attr>
     <attr>
+      <id>13</id>
+      <name>Read Soft Error Rate</name>
+    </attr>
+    <attr>
       <id>191</id>
       <name>G Sense Error Rate</name>
     </attr>
@@ -84,6 +93,10 @@
     <attr>
       <id>194</id>
       <name>Temperature</name>
+    </attr>
+    <attr>
+      <id>195</id>
+      <name>Hardware ECC Recovered</name>
     </attr>
     <attr>
       <id>196</id>
@@ -106,8 +119,20 @@
       <name>Multi-zone Error Rate</name>
     </attr>
     <attr>
+      <id>240</id>
+      <name>Head Flying Hours</name>
+    </attr>
+    <attr>
       <id>241</id>
       <name>Total LBAs Written</name>
+    </attr>
+    <attr>
+      <id>242</id>
+      <name>Total LBAs Read</name>
+    </attr>
+    <attr>
+      <id>254</id>
+      <name>Free Fall Sensor</name>
     </attr>
   </default>
 </smartdb>
