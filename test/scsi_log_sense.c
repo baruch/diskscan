@@ -26,12 +26,19 @@
 #include <scsi/sg.h>
 #include <inttypes.h>
 
-void do_command(int fd)
+static inline uint16_t get_uint16(unsigned char *buf, int start)
+{
+	return (uint16_t)buf[start] << 8 |
+		   (uint16_t)buf[start+1];
+}
+
+void dump_page(int fd, uint8_t page, uint8_t subpage)
 {
 	unsigned char cdb[32];
-	unsigned char buf[64*1024-1];
-	unsigned cdb_len = cdb_log_sense(cdb, 0, sizeof(buf));
+	unsigned char buf[16*1024];
+	unsigned cdb_len = cdb_log_sense(cdb, page, subpage, sizeof(buf));
 
+	printf("List page %02X subpage %02X\n", page, subpage);
 	bool ret = submit_cmd(fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV);
 	if (!ret) {
 		fprintf(stderr, "Failed to submit command\n");
@@ -49,12 +56,54 @@ void do_command(int fd)
 	}
 
 	printf("Read %u bytes\n", buf_len);
+	response_dump(buf, buf_len);
+	printf("\n");
+}
 
+void do_command(int fd)
+{
+	unsigned char cdb[32];
+	unsigned char buf[16*1024];
+	unsigned cdb_len = cdb_log_sense(cdb, 0, 0, sizeof(buf));
+
+	printf("List all supported pages\n");
+	bool ret = submit_cmd(fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV);
+	if (!ret) {
+		fprintf(stderr, "Failed to submit command\n");
+		return;
+	}
+
+	unsigned char *sense = NULL;
+	unsigned sense_len = 0;
+	unsigned buf_len = 0;
+	ret = read_response_buf(fd, &sense, &sense_len, &buf_len);
+
+	if (sense) {
+		printf("error while reading response buffer, nothing to show\n");
+		return;
+	}
+
+	printf("Read %u bytes\n", buf_len);
 	response_dump(buf, buf_len);
 
-	printf("Dumping all pages\n");
+	if (buf_len < 4) {
+		printf("log sense list must have at least 4 bytes\n");
+		return;
+	}
 
-	cdb_len = cdb_log_sense(cdb, 0x3F, sizeof(buf));
+	if (buf[0] != 0 || buf[1] != 0) {
+		printf("expected to receive log page 0 subpage 0\n");
+		return;
+	}
+
+	uint16_t num_pages = get_uint16(buf, 2);
+	uint16_t i;
+	for (i = 0; i < num_pages; i++) {
+		dump_page(fd, buf[4 + i], 0);
+	}
+
+	printf("List all pages and subpages\n");
+	cdb_len = cdb_log_sense(cdb, 0, 0xff, sizeof(buf));
 
 	ret = submit_cmd(fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV);
 	if (!ret) {
@@ -75,4 +124,25 @@ void do_command(int fd)
 	printf("Read %u bytes\n", buf_len);
 
 	response_dump(buf, buf_len);
+
+	if (buf_len < 4) {
+		printf("log sense list must have at least 4 bytes\n");
+		return;
+	}
+
+	if (buf[0] != 0x40 || buf[1] != 0xFF) {
+		printf("expected to receive log page 0 (spf=1) subpage 0xFF\n");
+		return;
+	}
+
+	num_pages = get_uint16(buf, 2);
+	for (i = 0; i < num_pages; i++) {
+		uint8_t page = buf[4 + i*2] & 0x3F;
+		uint8_t subpage = buf[4 + i*2 + 1];
+		if (subpage == 0) {
+			printf("Skipping page %02X subpage %02X since subpage is 00 it was already retrieved above\n", page, subpage);
+			continue;
+		}
+		dump_page(fd, page, subpage);
+	}
 } 
