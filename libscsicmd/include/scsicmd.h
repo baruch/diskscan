@@ -45,40 +45,48 @@ const char *asc_num_to_name(uint8_t asc, uint8_t ascq);
 
 int cdb_tur(unsigned char *cdb);
 
+#define SCSI_DEVICE_TYPE_LIST \
+	X(BLOCK) \
+    X(SEQ) \
+    X(PRINTER) \
+    X(PROCESSOR) \
+    X(WRITE_ONCE) \
+    X(CD) \
+    X(SCANNER) \
+    X(OPTICAL) \
+    X(MEDIA_CHANGER) \
+    X(COMMUNICATION) \
+    X(OBSOLETE_A) \
+    X(OBSOLETE_B) \
+    X(RAID) \
+    X(SES) \
+    X(RBC) \
+    X(OCRW) \
+    X(BCC) \
+    X(OSD) \
+    X(ADC2) \
+    X(SECURITY_MGR) \
+    X(RESERVED_14) \
+    X(RESERVED_15) \
+    X(RESERVED_16) \
+    X(RESERVED_17) \
+    X(RESERVED_18) \
+    X(RESERVED_19) \
+    X(RESERVED_1A) \
+    X(RESERVED_1B) \
+    X(RESERVED_1C) \
+    X(RESERVED_1D) \
+    X(WELL_KNOWN) \
+    X(UNKNOWN)
+
+#undef X
+#define X(name) SCSI_DEV_TYPE_ ## name,
 typedef enum scsi_device_type_e {
-	SCSI_DEV_TYPE_BLOCK = 0,
-	SCSI_DEV_TYPE_SEQ = 1,
-	SCSI_DEV_TYPE_PRINTER = 2,
-	SCSI_DEV_TYPE_PROCESSOR = 3,
-	SCSI_DEV_TYPE_WRITE_ONCE = 4,
-	SCSI_DEV_TYPE_CD = 5,
-	SCSI_DEV_TYPE_SCANNER = 6,
-	SCSI_DEV_TYPE_OPTICAL = 7,
-	SCSI_DEV_TYPE_MEDIA_CHANGER = 8,
-	SCSI_DEV_TYPE_COMMUNICATION = 9,
-	SCSI_DEV_TYPE_OBSOLETE_A = 0xA,
-	SCSI_DEV_TYPE_OBSOLETE_B = 0xB,
-	SCSI_DEV_TYPE_RAID = 0xC,
-	SCSI_DEV_TYPE_SES = 0xD,
-	SCSI_DEV_TYPE_RBC = 0xE,
-	SCSI_DEV_TYPE_OCRW = 0xF,
-	SCSI_DEV_TYPE_BCC = 0x10,
-	SCSI_DEV_TYPE_OSD = 0x11,
-	SCSI_DEV_TYPE_ADC2 = 0x12,
-	SCSI_DEV_TYPE_SECURITY_MGR = 0x13,
-	SCSI_DEV_TYPE_RESERVED_14 = 0x14,
-	SCSI_DEV_TYPE_RESERVED_15 = 0x15,
-	SCSI_DEV_TYPE_RESERVED_16 = 0x16,
-	SCSI_DEV_TYPE_RESERVED_17 = 0x17,
-	SCSI_DEV_TYPE_RESERVED_18 = 0x18,
-	SCSI_DEV_TYPE_RESERVED_19 = 0x19,
-	SCSI_DEV_TYPE_RESERVED_1A = 0x1A,
-	SCSI_DEV_TYPE_RESERVED_1B = 0x1B,
-	SCSI_DEV_TYPE_RESERVED_1C = 0x1C,
-	SCSI_DEV_TYPE_RESERVED_1D = 0x1D,
-	SCSI_DEV_TYPE_WELL_KNOWN = 0x1E,
-	SCSI_DEV_TYPE_UNKNOWN = 0x1F,
+	SCSI_DEVICE_TYPE_LIST
 } scsi_device_type_e;
+#undef X
+
+const char *scsi_device_type_name(scsi_device_type_e dev_type);
 
 typedef struct ata_status_t {
 	uint8_t extend;
@@ -154,5 +162,8 @@ static inline bool parse_read_capacity_16_simple(unsigned char *buf, unsigned bu
 /* read & write */
 int cdb_read_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
 int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_length_blocks);
+
+/* log sense */
+int cdb_log_sense(unsigned char *cdb, uint8_t page_code, uint8_t subpage_code, uint16_t alloc_len);
 
 #endif

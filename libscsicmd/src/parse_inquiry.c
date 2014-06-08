@@ -63,3 +63,16 @@ bool parse_inquiry(unsigned char *buf, unsigned buf_len, int *device_type, scsi_
 
         return true;
 }
+
+#define STRINGIFY(name) # name
+
+const char *scsi_device_type_name(scsi_device_type_e dev_type)
+{
+#define X(name) case SCSI_DEV_TYPE_##name: return STRINGIFY(name);
+	switch (dev_type) {
+	SCSI_DEVICE_TYPE_LIST
+#undef X
+	}
+
+	return "Unknown device type";
+}

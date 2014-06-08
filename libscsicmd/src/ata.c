@@ -69,3 +69,68 @@ bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_
 
         return false;
 }
+
+/* ATA SMART READ DATA */
+
+uint16_t ata_get_ata_smart_read_data_version(const unsigned char *buf)
+{
+	return ata_get_word((const char *)buf, 0);
+}
+
+int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *attrs, int max_attrs)
+{
+	if (!ata_check_ata_smart_read_data_checksum(buf))
+		return -1;
+
+	if (ata_get_ata_smart_read_data_version(buf) != 0x0010)
+		return -1;
+
+	int i, j;
+
+	for (i = 0, j = 0; i < MAX_SMART_ATTRS; i++) {
+		const unsigned char *raw_attr = buf + 2 + 12*i;
+		ata_smart_attr_t *attr = &attrs[j];
+
+		attr->id = raw_attr[0];
+		if (attr->id == 0) // Skip an invalid attribute
+			continue;
+		attr->status = raw_attr[1] | raw_attr[2]<<8;
+		attr->value = raw_attr[3];
+		attr->min = raw_attr[4];
+		attr->raw = (raw_attr[5]) |
+			        (raw_attr[6] << 8) |
+					(raw_attr[7] << 16) |
+					(raw_attr[8] << 24) |
+					((uint64_t)raw_attr[9] << 32) |
+					((uint64_t)raw_attr[10] << 40);
+
+		j++;
+	}
+
+	return j;
+}
+
+int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t *attrs, int max_attrs)
+{
+	if (!ata_check_ata_smart_read_data_checksum(buf))
+		return -1;
+
+	if (ata_get_ata_smart_read_data_version(buf) != 0x0010)
+		return -1;
+
+	int i, j;
+
+	for (i = 0, j = 0; i < MAX_SMART_ATTRS; i++) {
+		const unsigned char *raw_attr = buf + 2 + 12*i;
+		ata_smart_thresh_t *attr = &attrs[j];
+
+		attr->id = raw_attr[0];
+		if (attr->id == 0) // Skip an invalid attribute
+			continue;
+		attr->threshold = raw_attr[1];
+
+		j++;
+	}
+
+	return j;
+}

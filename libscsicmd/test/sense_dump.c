@@ -31,6 +31,8 @@ static void sense_dump_sense_info(sense_info_t *si)
         print_code("Type", si->is_fixed, "Fixed", "Descriptor");
         print_code("Time", si->is_current, "Current", "Deferred");
         printf("Code: %x/%02x/%02x\n", si->sense_key, si->asc, si->ascq);
+        printf("Code: %s/%s\n", sense_key_to_name(si->sense_key), asc_num_to_name(si->asc, si->ascq));
+        printf("Vendor Unique: 0x%04x\n", si->vendor_unique_error);
         if (si->information_valid)
                 printf("Information: %"PRIx64"\n", si->information);
         if (si->cmd_specific_valid)
