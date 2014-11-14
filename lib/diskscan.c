@@ -48,6 +48,7 @@ struct scan_state {
 	uint64_t progress_bytes;
 	int progress_part;
 	int progress_full;
+	unsigned num_unknown_errors;
 };
 
 const char *conclusion_to_str(enum conclusion conclusion)
@@ -217,6 +218,7 @@ static const char *error_to_str(enum result_error_e err)
 		case ERROR_UNCORRECTED: return "uncorrected";
 		case ERROR_NEED_RETRY: return "need_retry";
 		case ERROR_FATAL: return "fatal";
+		case ERROR_UNKNOWN: return "unknown";
 	}
 
 	return "unknown";
@@ -268,12 +270,21 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 			ERROR("Fatal error occurred, bailing out.");
 			return false;
 		}
+		if (io_res.error == ERROR_UNKNOWN) {
+			if (state->num_unknown_errors++ > 500) {
+				ERROR("%u unknown errors occurred, assuming fatal issue.", state->num_unknown_errors);
+				return false;
+			}
+			ERROR("Unknown error occurred, possibly untranslated error by storage layers, trying to continue.");
+
+		}
 
 		if (s_errno != EIO && s_errno != 0)
 			abort();
 		// TODO: What to do when no everything was read but errno is zero?
 	}
 	else {
+		state->num_unknown_errors = 0; // Clear non-consecutive unknown errors
 		report_scan_success(disk, offset, data_size, t);
 	}
 

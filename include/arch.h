@@ -21,6 +21,7 @@ typedef struct {
 		ERROR_UNCORRECTED, /* Unocrrected but non-fatal (i.e. local) error */
 		ERROR_NEED_RETRY,  /* Temporary error that only merits a retry to complete */
 		ERROR_FATAL,       /* A fatal error encountered, no reason to continue using disk */
+		ERROR_UNKNOWN,     /* An unknown error encountered, continue for a while unless it persists */
 	} error;
 
 	sense_info_t info;

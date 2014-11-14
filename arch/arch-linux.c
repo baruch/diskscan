@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <errno.h>
 
 static void strtrim(char *s)
 {
@@ -71,7 +72,7 @@ static enum result_error_e sense_to_error(sense_info_t *info)
 	}
 
 	ERROR("BUG: Cannot translate sense 0x%02X to error code", info->sense_key);
-	return ERROR_FATAL;
+	return ERROR_UNKNOWN;
 }
 
 static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
@@ -105,6 +106,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 
 	ret = ioctl(fd, SG_IO, &hdr);
 	if (ret < 0) {
+		ERROR("Failed to issue ioctl to device errno=%d: %m", errno);
 		io_res->error = ERROR_FATAL;
 		io_res->data = DATA_NONE;
 		return -1;
@@ -142,7 +144,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 			io_res->error = sense_to_error(&io_res->info);
 		} else {
 			// Parsing of the sense failed, assume the worst
-			io_res->error = ERROR_FATAL;
+			io_res->error = ERROR_UNKNOWN;
 		}
 		return 0;
 	}
@@ -150,7 +152,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	if (hdr.status != 0) {
 		// No sense but we have an error, consider it fatal
 		ERROR("IO failed with no sense: status=%d mask=%d driver=%d msg=%d host=%d", hdr.status, hdr.masked_status, hdr.driver_status, hdr.msg_status, hdr.host_status);
-		io_res->error = ERROR_FATAL;
+		io_res->error = ERROR_UNKNOWN;
 		return 0;
 	}
 

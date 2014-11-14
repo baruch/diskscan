@@ -49,6 +49,7 @@ static const char *result_error_to_name(enum result_error_e error)
 		case ERROR_UNCORRECTED: return "error_uncorrected";
 		case ERROR_NEED_RETRY: return "error_need_retry";
 		case ERROR_FATAL: return "error_fatal";
+		case ERROR_UNKNOWN: return "error_unknown";
 	}
 
 	return "error_unknown";
