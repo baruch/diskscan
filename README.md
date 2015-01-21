@@ -8,6 +8,14 @@ retries. This can be used to assess the state of the disk and maybe decide on a
 replacement in advance to its imminent failure. The disk self test may or may
 not pick up on such clues depending on the disk vendor decision making logic.
 
+## diskscan vs. badblocks
+
+badblocks is intended for a simple task, to find bad blocks in the media. diskscan is trying to say a lot more about the media, specifically it is trying not just to say where is a bad block but also what blocks are already deteriorated but still readable and also give information on the latency of reading each block which should help to give an overall assessment of the disk media.
+
+In essence badblocks looks for fatal issues already happening and diskscan is for upcoming issues that can be fixed.
+
+Also, badblocks is essentially obsolete in this day and age since the disks themselves will reallocate the data and there is no real need to map the bad blocks in the filesystem level anymore.
+
 Build
 -----
 
