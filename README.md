@@ -1,5 +1,4 @@
-DiskScan -- Scan HDD/SSD for failed and near failed sectors
------------------------------------------------------------
+# DiskScan -- Scan HDD/SSD for failed and near failed sectors
 
 DiskScan is a Unix/Linux tool to scan a block device and check if there are
 unreadable sectors, in addition it uses read latency times as an assessment for
@@ -16,23 +15,20 @@ In essence badblocks looks for fatal issues already happening and diskscan is fo
 
 Also, badblocks is essentially obsolete in this day and age since the disks themselves will reallocate the data and there is no real need to map the bad blocks in the filesystem level anymore.
 
-Build
------
+## Build
 
 This project is using [redo][1] and includes the minimal do program as a
 replacement if you don't have the full redo installed. As a shortcut for those
 who are used to the traditional Make there is a Makefile provided that does the
 right thing.
 
-Install
--------
+## Install
 
 make install
 
 You can control the DESTDIR when building packages and PREFIX if /usr is not right.
 
-License
--------
+## License
 
 DiskScan is licensed under the GPL version 3 or later.
 
