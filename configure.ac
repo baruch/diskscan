@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([diskscan], [0.14-dev], [https://github.com/baruch/diskscan/issues])
+AC_INIT([diskscan], [0.15], [https://github.com/baruch/diskscan/issues])
 AC_CONFIG_SRCDIR([diskscan.c])
 AC_CONFIG_HEADERS([config.h])
 
