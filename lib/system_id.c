@@ -1,6 +1,7 @@
 #include "system_id.h"
 
 #include "sha1.h"
+#include "arch.h"
 
 #include <memory.h>
 #include <stdio.h>
@@ -74,53 +75,6 @@ static void chassis_serial_read(char *buf, int len)
 static void baseboard_serial_read(char *buf, int len)
 {
 	dmidecode_read("baseboard-serial-number", buf, len);
-}
-
-static void mac_read(char *buf, int len)
-{
-	struct ifreq ifr;
-	struct ifconf ifc;
-	char data[1024];
-	int success = 0;
-
-	buf[0] = 0;
-
-	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-	if (sock == -1) {
-		return;
-	};
-
-	ifc.ifc_len = sizeof(data);
-	ifc.ifc_buf = data;
-	if (ioctl(sock, SIOCGIFCONF, &ifc) == -1) {
-		/* handle error */
-		goto Exit;
-	}
-
-	struct ifreq* it = ifc.ifc_req;
-	const struct ifreq* const end = it + (ifc.ifc_len / sizeof(struct ifreq));
-
-	for (; it != end; ++it) {
-		strcpy(ifr.ifr_name, it->ifr_name);
-		if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0) {
-			if (! (ifr.ifr_flags & IFF_LOOPBACK)) { // don't count loopback
-				if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0) {
-					success = 1;
-					break;
-				}
-			}
-		}
-		else { /* handle error */ }
-	}
-
-	if (success) {
-		sha1_calc((unsigned char*)ifr.ifr_hwaddr.sa_data, 6, buf, len);
-	} else {
-		memset(buf, 0, len);
-	}
-
-Exit:
-	close(sock);
 }
 
 static void os_read(char *buf, int len)
