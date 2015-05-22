@@ -1,5 +1,7 @@
 # DiskScan -- Scan HDD/SSD for failed and near failed sectors
 
+[![Build Status](https://travis-ci.org/baruch/diskscan.svg?branch=master)](https://travis-ci.org/baruch/diskscan)
+
 DiskScan is a Unix/Linux tool to scan a block device and check if there are
 unreadable sectors, in addition it uses read latency times as an assessment for
 a near failure as sectors that are problematic to read usually entail many
