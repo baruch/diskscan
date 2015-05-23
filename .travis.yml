@@ -1,6 +1,6 @@
 language: c
 script: make
-install: sudo apt-get install autoconf
+install: sudo apt-get install autoconf python-yaml
 compiler:
   - gcc
   - clang
