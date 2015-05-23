@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <net/if.h>
+#include <netinet/in.h>
 
 static void strtrim(char *s)
 {
@@ -332,7 +334,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	return 0;
 }
 
-void mac_read(char *buf, int len)
+void mac_read(unsigned char *buf, int len)
 {
 	struct ifreq ifr;
 	struct ifconf ifc;
@@ -370,7 +372,7 @@ void mac_read(char *buf, int len)
 	}
 
 	if (success) {
-		sha1_calc((unsigned char*)ifr.ifr_hwaddr.sa_data, 6, buf, len);
+		memcpy(buf, ifr.ifr_hwaddr.sa_data, len >= 6 ? 6 : len);
 	} else {
 		memset(buf, 0, len);
 	}

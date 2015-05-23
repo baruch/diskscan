@@ -6,10 +6,7 @@
 #include <memory.h>
 #include <stdio.h>
 #include <assert.h>
-#include <sys/ioctl.h>
-#include <net/if.h> 
 #include <unistd.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -95,6 +92,10 @@ bool system_identifier_read(system_identifier_t *system_id)
 	system_serial_read(system_id->system, sizeof(system_id->system));
 	chassis_serial_read(system_id->chassis, sizeof(system_id->chassis));
 	baseboard_serial_read(system_id->baseboard, sizeof(system_id->baseboard));
-	mac_read(system_id->mac, sizeof(system_id->mac));
+
+	unsigned char mac[6];
+	mac_read(mac, sizeof(mac));
+	sha1_calc(mac, sizeof(mac), system_id->mac, sizeof(system_id->mac));
+
 	return true;
 }

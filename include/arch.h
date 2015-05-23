@@ -36,7 +36,7 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size);
 int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata, unsigned char *ata_buf, unsigned *ata_buf_len);
 
-void mac_read(char *buf, int len);
+void mac_read(unsigned char *buf, int len);
 
 #include "arch-internal.h"
 
