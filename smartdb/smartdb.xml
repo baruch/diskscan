@@ -1,0 +1,139 @@
+<smartdb>
+  <names>
+    <name>Raw Read Error Rate</name>
+    <name>Throughput Performance</name>
+    <name>Spin Up Time</name>
+    <name>Start/Stop Count</name>
+    <name>Reallocated Sectors Count</name>
+    <name>Seek Error Rate</name>
+    <name>Seek Time Performance</name>
+    <name type="poh">Power On Hours</name>
+    <name>Spin Retry Count</name>
+    <name>Device Power Cycle Count</name>
+    <name>G Sense Error Rate</name>
+    <name>Power Off Retract Count</name>
+    <name>Load/Unload Cycle Count</name>
+    <name type="temperature">Temperature</name>
+    <name type="reallocations">Reallocation Event Count</name>
+    <name type="pending_reallocations">Pending Sector Reallocation Count</name>
+    <name>Off-Line Scan Uncorrecable Sector Count</name>
+    <name>CRC Error Count</name>
+    <name>Total LBAs Written</name>
+    <name>Multi-zone Error Rate</name>
+    <name>Drive Calibration Retry Count</name>
+    <name>Free Fall Sensor</name>
+    <name>Total LBAs Read</name>
+    <name>Head Flying Hours</name>
+    <name>Hardware ECC Recovered</name>
+    <name>Read Soft Error Rate</name>
+  </names>
+  <default>
+    <!-- The below were added based on an HGST documentation and seem to be pretty universal -->
+    <attr>
+      <id>1</id>
+      <name>Raw Read Error Rate</name>
+      <raw>dec48</raw>
+    </attr>
+    <attr>
+      <id>2</id>
+      <name>Throughput Performance</name>
+    </attr>
+    <attr>
+      <id>3</id>
+      <name>Spin Up Time</name>
+    </attr>
+    <attr>
+      <id>4</id>
+      <name>Start/Stop Count</name>
+    </attr>
+    <attr>
+      <id>5</id>
+      <name>Reallocated Sectors Count</name>
+    </attr>
+    <attr>
+      <id>7</id>
+      <name>Seek Error Rate</name>
+    </attr>
+    <attr>
+      <id>8</id>
+      <name>Seek Time Performance</name>
+    </attr>
+    <attr>
+      <id>9</id>
+      <name>Power On Hours</name>
+    </attr>
+    <attr>
+      <id>10</id>
+      <name>Spin Retry Count</name>
+    </attr>
+    <attr>
+      <id>11</id>
+      <name>Drive Calibration Retry Count</name>
+    </attr>
+    <attr>
+      <id>12</id>
+      <name>Device Power Cycle Count</name>
+    </attr>
+    <attr>
+      <id>13</id>
+      <name>Read Soft Error Rate</name>
+    </attr>
+    <attr>
+      <id>191</id>
+      <name>G Sense Error Rate</name>
+    </attr>
+    <attr>
+      <id>192</id>
+      <name>Power Off Retract Count</name>
+    </attr>
+    <attr>
+      <id>193</id>
+      <name>Load/Unload Cycle Count</name>
+    </attr>
+    <attr>
+      <id>194</id>
+      <name>Temperature</name>
+    </attr>
+    <attr>
+      <id>195</id>
+      <name>Hardware ECC Recovered</name>
+    </attr>
+    <attr>
+      <id>196</id>
+      <name>Reallocation Event Count</name>
+    </attr>
+    <attr>
+      <id>197</id>
+      <name>Pending Sector Reallocation Count</name>
+    </attr>
+    <attr>
+      <id>198</id>
+      <name>Off-Line Scan Uncorrecable Sector Count</name>
+    </attr>
+    <attr>
+      <id>199</id>
+      <name>CRC Error Count</name>
+    </attr>
+    <attr>
+      <id>200</id>
+      <name>Multi-zone Error Rate</name>
+    </attr>
+    <attr>
+      <id>240</id>
+      <name>Head Flying Hours</name>
+    </attr>
+    <attr>
+      <id>241</id>
+      <name>Total LBAs Written</name>
+    </attr>
+    <attr>
+      <id>242</id>
+      <name>Total LBAs Read</name>
+    </attr>
+    <attr>
+      <id>254</id>
+      <name>Free Fall Sensor</name>
+    </attr>
+  </default>
+</smartdb>
+<!-- vim: set et sw=2 ts=2 : -->

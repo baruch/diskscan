@@ -1,8 +1,8 @@
-# Adapter for those who don't know redo
+# Adapter for those who don't know ninja
 all:
-	./do all
+	ninja
 
 clean:
-	./do clean
+	ninja -t clean
 
 .PHONY: all clean

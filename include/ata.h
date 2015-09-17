@@ -133,9 +133,38 @@ static inline int cdb_ata_passthrough_12(unsigned char *cdb, uint8_t command, ui
 	return 12;
 }
 
+static inline int cdb_ata_passthrough_16(unsigned char *cdb, uint8_t command, uint16_t feature, uint64_t lba, uint16_t sector_count, passthrough_protocol_e protocol, bool dir_in, int ck_cond, uint8_t device)
+{
+	cdb[0] = 0x85;
+	cdb[1] = protocol<<1 | 1; // Turn on EXTEND for 48-bit addressing
+	cdb[2] = ata_passthrough_flags_2(0, ck_cond, dir_in, 1, ATA_PT_LEN_SPEC_SECTOR_COUNT);
+	cdb[3] = (feature >> 8) & 0xFF;
+	cdb[4] = feature & 0xFF;
+	cdb[5] = (sector_count >> 8) & 0xFF;
+	cdb[6] = sector_count & 0xFF;
+
+	cdb[7] = (lba >> 24) & 0xFF;
+	cdb[8] = lba & 0xFF;
+	cdb[9] = (lba >> 32) & 0xFF;
+	cdb[10] = (lba >> 8) & 0xFF;
+	cdb[11] = (lba >> 40) & 0xFF;
+	cdb[12] = (lba >> 16) & 0xFF;
+
+	cdb[13] = device;
+	cdb[14] = command;
+	cdb[15] = 0;
+
+	return 16;
+}
+
 static inline int cdb_ata_identify(unsigned char *cdb)
 {
-	return cdb_ata_passthrough_12(cdb, 0xEC, 0x00, 0x0, 1, PT_PROTO_PIO_DATA_IN, true, 0);
+	return cdb_ata_passthrough_12(cdb, 0xEC, 0x00, 0x0, 1, PT_PROTO_DMA, true, 0);
+}
+
+static inline int cdb_ata_identify_16(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_16(cdb, 0xEC, 0x00, 0x0, 1, PT_PROTO_DMA, true, 0, 0);
 }
 
 static inline int cdb_ata_smart_return_status(unsigned char *cdb)
@@ -166,9 +195,52 @@ static inline int cdb_ata_smart_read_data(unsigned char *cdb)
 	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD0, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
 }
 
+
+static inline int cdb_ata_smart_read_threshold(unsigned char *cdb)
+{
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD1, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
+}
+
 static inline int cdb_ata_check_power_mode(unsigned char *cdb)
 {
 	return cdb_ata_passthrough_12(cdb, 0xE5, 0, 0, 0, PT_PROTO_NON_DATA, true, 1);
 }
+
+/* Parse ATA SMART READ DATA results */
+#define MAX_SMART_ATTRS 30
+typedef struct ata_smart_attr {
+	uint8_t id;
+	uint16_t status;
+	uint8_t value;
+	uint8_t min;
+	uint8_t threshold;
+	uint64_t raw;
+} ata_smart_attr_t;
+
+typedef struct ata_smart_thresh {
+	uint8_t id;
+	uint8_t threshold;
+} ata_smart_thresh_t;
+
+static inline uint8_t ata_calc_ata_smart_read_data_checksum(const unsigned char *buf) {
+	unsigned val = 0;
+	int i;
+	for (i = 0; i < 511; i++)
+		val += buf[i];
+	return 0x100 - (val & 0xFF); // We want the complement
+}
+
+static inline uint8_t ata_get_ata_smart_read_data_checksum(const unsigned char *buf) {
+	return buf[511];
+}
+
+static inline bool ata_check_ata_smart_read_data_checksum(const unsigned char *buf) {
+	return ata_get_ata_smart_read_data_checksum(buf) == ata_calc_ata_smart_read_data_checksum(buf);
+}
+
+uint16_t ata_get_ata_smart_read_data_version(const unsigned char *buf);
+
+int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *attrs, int max_attrs);
+int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t *attr, int max_attrs);
 
 #endif

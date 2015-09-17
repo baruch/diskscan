@@ -22,7 +22,7 @@ for line in sys.stdin:
         ascq = 'NN'
     else:
         ascq = int(ascq_str, 16)
-    name = line[25:]
+    name = line[24:]
     if name == '':
         continue
 

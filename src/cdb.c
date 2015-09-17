@@ -105,3 +105,14 @@ int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_l
 	cdb[9] = 0;
 	return LEN;
 }
+
+int cdb_log_sense(unsigned char *cdb, uint8_t page_code, uint8_t subpage_code, uint16_t alloc_len)
+{
+	const int LEN = 10;
+	memset(cdb, 0, LEN);
+	cdb[0] = 0x4D;
+	cdb[2] = (1 << 6) | (page_code & 0x3F); // The pc is always set to 1 for Cumulative values
+	cdb[3] = subpage_code;
+	set_uint16(cdb, 7, alloc_len);
+	return LEN;
+}

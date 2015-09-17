@@ -170,7 +170,13 @@ static bool parse_sense_descriptor(unsigned char *sense, int sense_len, sense_in
                                         info->ata_status.error = sense[idx+3];
                                         if (info->ata_status.extend) {
                                                 info->ata_status.sector_count = (sense[idx+4] << 8) | sense[idx+5];
-                                                info->ata_status.lba = sense[idx+7] | (sense[idx+6]<<8) | (sense[idx+9]<<16) | (sense[idx+8]<<24) | ((uint64_t)sense[idx+11]<<32) | ((uint64_t)sense[idx+10]<<40);
+                                                info->ata_status.lba =
+													((uint64_t)sense[idx+7]) | 
+													((uint64_t)sense[idx+6]<<8) |
+													((uint64_t)sense[idx+9]<<16) |
+													((uint64_t)sense[idx+8]<<24) |
+													((uint64_t)sense[idx+11]<<32) |
+													((uint64_t)sense[idx+10]<<40);
                                         } else {
                                                 info->ata_status.sector_count = sense[idx+4];
                                                 info->ata_status.lba = sense[idx+7] | (sense[idx+9]<<8) | (sense[idx+11]<<16);

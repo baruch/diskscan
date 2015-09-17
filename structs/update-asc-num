@@ -1,7 +1,11 @@
 #!/bin/sh
 
 set -e
+if [ -d structs ]; then
+        cd structs
+fi
 curl 'http://www.t10.org/lists/asc-num.txt' > asc-num.txt.tmp
 mv asc-num.txt.tmp asc-num.txt
+dos2unix asc-num.txt
 ./asc-num-to-list < asc-num.txt > asc-num.h
-mv asc-num.h include/asc_num_list.h
+mv asc-num.h ../include/asc_num_list.h
