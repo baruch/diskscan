@@ -73,10 +73,10 @@ static void sense_dump_sense_info(sense_info_t *si)
         if (si->ata_status_valid) {
                 printf("ATA Status valid\n"); /*TODO: more details */
                 printf("ATA\n");
-                printf("    Extend: %d\n", si->ata_status.extend);
-                printf("    Error: %d\n", si->ata_status.error);
-                printf("    Device: %d\n", si->ata_status.device);
-                printf("    Status: %d\n", si->ata_status.status);
+                printf("    Extend: %02x\n", si->ata_status.extend);
+                printf("    Error: %02x\n", si->ata_status.error);
+                printf("    Device: %02x\n", si->ata_status.device);
+                printf("    Status: %02x\n", si->ata_status.status);
                 printf("    Sector Count: %u\n", si->ata_status.sector_count);
                 printf("    LBA: %"PRIu64" / %"PRIx64"\n", si->ata_status.lba, si->ata_status.lba);
         }

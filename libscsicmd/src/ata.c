@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <memory.h>
 
+/*
 bool ata_inq_checksum(unsigned char *buf, int buf_len)
 {
 	char sum;
@@ -34,6 +35,7 @@ bool ata_inq_checksum(unsigned char *buf, int buf_len)
 
 	return sum == 0;
 }
+*/
 
 bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_t *status)
 {
@@ -87,7 +89,7 @@ int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *at
 
 	int i, j;
 
-	for (i = 0, j = 0; i < MAX_SMART_ATTRS; i++) {
+	for (i = 0, j = 0; i < MAX_SMART_ATTRS && i < max_attrs; i++) {
 		const unsigned char *raw_attr = buf + 2 + 12*i;
 		ata_smart_attr_t *attr = &attrs[j];
 
@@ -120,7 +122,7 @@ int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t
 
 	int i, j;
 
-	for (i = 0, j = 0; i < MAX_SMART_ATTRS; i++) {
+	for (i = 0, j = 0; i < MAX_SMART_ATTRS && i < max_attrs; i++) {
 		const unsigned char *raw_attr = buf + 2 + 12*i;
 		ata_smart_thresh_t *attr = &attrs[j];
 

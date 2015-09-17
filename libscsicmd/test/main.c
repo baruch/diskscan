@@ -98,7 +98,7 @@ static void test(const char *devname)
 	close(fd);
 }
 
-static int usage(int argc, char *name)
+static int usage(char *name)
 {
 	fprintf(stderr, "Usage:\n");
 	fprintf(stderr, "\t%s disk_device\n", name);
@@ -108,7 +108,7 @@ static int usage(int argc, char *name)
 int main(int argc, char **argv)
 {
 	if (argc != 2 || strstr(argv[1], "/sd") != NULL)
-		return usage(argc, argv[0]);
+		return usage(argv[0]);
 
 	test(argv[1]);
 	return 0;

@@ -1,6 +1,8 @@
 *.o
 .*.d
-.redo
+build.ninja
+.ninja_log
+.ninja_deps
 .gdb_history
 tags
 libscsicmd.a

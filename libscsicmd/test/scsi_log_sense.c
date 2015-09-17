@@ -32,7 +32,7 @@ static inline uint16_t get_uint16(unsigned char *buf, int start)
 		   (uint16_t)buf[start+1];
 }
 
-void dump_page(int fd, uint8_t page, uint8_t subpage)
+static void dump_page(int fd, uint8_t page, uint8_t subpage)
 {
 	unsigned char cdb[32];
 	unsigned char buf[16*1024];

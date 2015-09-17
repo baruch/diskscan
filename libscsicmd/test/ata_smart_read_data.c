@@ -22,7 +22,7 @@
 #include <scsi/sg.h>
 #include <inttypes.h>
 
-bool read_data(int fd, unsigned char *buf, int buf_len)
+static bool read_data(int fd, unsigned char *buf, int buf_len)
 {
 	unsigned char cdb[12];
 
@@ -57,7 +57,7 @@ bool read_data(int fd, unsigned char *buf, int buf_len)
 	return true;
 }
 
-bool read_threshold(int fd, unsigned char *buf, int buf_len)
+static bool read_threshold(int fd, unsigned char *buf, int buf_len)
 {
 	unsigned char cdb[12];
 
