@@ -1,6 +1,8 @@
 *.o
 .*.d
 build.ninja
+lib.ninja
+tests.ninja
 .ninja_log
 .ninja_deps
 .gdb_history
