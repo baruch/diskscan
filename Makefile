@@ -9,7 +9,7 @@ build.ninja: configure
 	./configure
 
 build: build.ninja
-	ninja
+	@if [ "${V}" = 1 ]; then ninja -v; else ninja; fi
 
 clean:
 	ninja -t clean

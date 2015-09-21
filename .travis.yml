@@ -1,5 +1,5 @@
 language: c
-script: make
+script: make V=1
 sudo: false
 addons:
   apt:
