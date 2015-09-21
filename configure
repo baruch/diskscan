@@ -59,7 +59,7 @@ class Platform:
         f = file(filename, 'w')
         f.write(src)
         f.close()
-        rc = os.system('gcc %s %s -o %s %s' % (self.cflags_fmt() + ' ' + cflags, self.ldflags_fmt() + ' ' + ldflags, outfilename, filename))
+        rc = os.system('gcc %s %s -o %s %s >/dev/null 2>&1' % (self.cflags_fmt() + ' ' + cflags, self.ldflags_fmt() + ' ' + ldflags, outfilename, filename))
         os.unlink(filename)
         if os.access(outfilename, os.F_OK): os.unlink(outfilename)
         return rc == 0
