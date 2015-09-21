@@ -7,6 +7,11 @@ all: build
 
 build.ninja: configure
 	./configure
+	@if [ "${V}" = 1]; then \
+		echo 'build.binja'; cat build.ninja; \
+		echo 'lib.ninja'; cat libscsicmd/lib.ninja; \
+	fi
+
 
 build: build.ninja
 	@if [ "${V}" = 1 ]; then ninja -v; else ninja; fi
