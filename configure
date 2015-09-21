@@ -154,6 +154,9 @@ n.rule('tags',
 all_targets += n.build('tags', 'tags', lib_srcs + glob.glob('include/*.h'))
 n.newline()
 
+# Build manpage
+all_targets += n.build('Documentation/diskscan.1', 'script', 'Documentation/diskscan.1.in', variables=[('script', 'sed -e "s/@PACKAGE_VERSION@/%s/"' % version)])
+
 n.build('all', 'phony', all_targets)
 n.default('all')
 
