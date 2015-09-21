@@ -1,4 +1,3 @@
-#include "config.h"
 #include "arch.h"
 
 #include <sys/disk.h>

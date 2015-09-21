@@ -1,4 +1,3 @@
-#include "config.h"
 #include "arch.h"
 
 #include <sys/types.h>

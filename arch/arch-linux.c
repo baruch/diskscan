@@ -1,4 +1,3 @@
-#include "config.h"
 #include "arch.h"
 #include "libscsicmd/include/scsicmd.h"
 #include "libscsicmd/include/ata.h"

@@ -18,7 +18,6 @@
  * 
  */
 
-#include "config.h"
 #include "diskscan.h"
 #include "data.h"
 #include "compiler.h"
