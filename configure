@@ -2,8 +2,10 @@
 
 import platform
 
+version = '0.15-dev'
+
 lib_srcs = [
-        'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c', 'lib/version.c',
+        'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c',
 ]
 
 arch_freebsd = {'src': 'arch/arch-freebsd.c', 'h': 'arch/arch-posix.h'}
@@ -27,7 +29,7 @@ executables = {
 
 cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-g', '-O0', '-Wall', '-Werror', '-Wextra', '-Wshadow',
           '-Wmissing-prototypes', '-Winit-self', '-pipe', '-D_GNU_SOURCE',
-          '-D_FORTIFY_SOURCE=2']
+          '-D_FORTIFY_SOURCE=2', '-DVERSION="%s"' % version]
 ldflags = []
 
 import os, os.path

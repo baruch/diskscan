@@ -21,7 +21,6 @@
 #include "config.h"
 #include "verbose.h"
 #include "diskscan.h"
-#include "version.h"
 #include "compiler.h"
 #include "cli.h"
 
