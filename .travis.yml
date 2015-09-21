@@ -1,6 +1,10 @@
 language: c
 script: make
-install: sudo apt-get install python-yaml
+sudo: false
+addons:
+  apt:
+    packages:
+      - python-yaml
 compiler:
   - gcc
     #- clang
