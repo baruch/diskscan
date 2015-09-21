@@ -23,6 +23,13 @@ ldflags = []
 import os, os.path
 import glob
 import ninja_syntax
+import sys
+
+is_lib_only = '--lib-only' in sys.argv
+lib_prefix = ''
+if is_lib_only:
+    lib_prefix = 'libscsicmd/'
+    lib_srcs = map(lambda x: lib_prefix + x, lib_srcs)
 
 # Top level ninja
 n = ninja_syntax.Writer(file('build.ninja', 'w'))

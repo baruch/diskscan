@@ -1,21 +1,19 @@
-all:
-	./do all
+# Adapter for those who don't know ninja
+all: build
 
-static:
-	LDFLAGS=-static ./do all
+build.ninja: configure
+	./configure
 
-scan:
-	scan-build ./do all
+build: build.ninja
+	ninja
 
 clean:
-	./do clean
+	ninja -t clean
 
-install:
-	./do all install
+.PHONY: all clean build
 
-# This only works with redo
-dist:
-	redo dist
+# TODO: Port the scan to ninja
+#scan:
+#	scan-build ./do all
 
-distclean:
-	./do clean
+# Recreate targets: dist distclean install

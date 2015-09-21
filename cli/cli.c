@@ -49,14 +49,14 @@ struct options_t {
 
 static void print_header(void)
 {
-	printf("diskscan version %s\n\n", TAG);
+	printf("diskscan version %s\n\n", VERSION);
 	VERBOSE("Verbosity set");
 	VVERBOSE("High verbosity set");
 	VVVERBOSE("Very high verbosity set");
 }
 
 static int usage(void) {
-	printf("diskscan version %s\n\n", TAG);
+	printf("diskscan version %s\n\n", VERSION);
 	printf("diskscan [options] /dev/sd\n");
 	printf("Options:\n");
 	printf("    -v, --verbose        - Increase verbosity, multiple uses for higher levels\n");
@@ -145,22 +145,22 @@ static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
 
 }
 
-void report_scan_done(disk_t *disk)
+void report_scan_done(disk_t *pdisk)
 {
 	unsigned hist_idx;
 	
 	printf("Access time histogram:\n");
-	for (hist_idx = 0; hist_idx < ARRAY_SIZE(disk->histogram); hist_idx++)
+	for (hist_idx = 0; hist_idx < ARRAY_SIZE(pdisk->histogram); hist_idx++)
 	{
-		if (hist_idx != ARRAY_SIZE(disk->histogram)-1)
-			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx].top_val, disk->histogram[hist_idx]);
+		if (hist_idx != ARRAY_SIZE(pdisk->histogram)-1)
+			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx].top_val, pdisk->histogram[hist_idx]);
 		else
-			printf("%8s: %" PRIu64 "\n", "above that", disk->histogram[hist_idx]);
+			printf("%8s: %" PRIu64 "\n", "above that", pdisk->histogram[hist_idx]);
 	}
 
-	print_latency(disk->latency_graph, disk->latency_graph_len);
+	print_latency(pdisk->latency_graph, pdisk->latency_graph_len);
 
-	printf("Conclusion: %s\n", conclusion_to_str(disk->conclusion));
+	printf("Conclusion: %s\n", conclusion_to_str(pdisk->conclusion));
 }
 
 static unsigned str_to_scan_size(const char *str)
