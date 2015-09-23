@@ -5,25 +5,25 @@ import yaml
 
 def emit_func_bit(name, field, params):
 	bit_params = dict(name=name, field=field, word=int(params[0]), bit=int(params[1]))
-	print """static inline bool ata_get_%(name)s_%(field)s(const char *buf) {
+	print("""static inline bool ata_get_%(name)s_%(field)s(const char *buf) {
 	ata_word_t val = ata_get_word(buf, %(word)d);
 	return val & (1 << %(bit)d);
 }
-""" % bit_params
+""" % bit_params)
 
 def emit_func_string(name, field, params):
 	bit_params = dict(name=name, field=field, word_start=int(params[0]), word_end=int(params[1]))
-	print """static inline void ata_get_%(name)s_%(field)s(const char *buf, char *out) {
+	print("""static inline void ata_get_%(name)s_%(field)s(const char *buf, char *out) {
 	ata_get_string(buf, %(word_start)d, %(word_end)d, out);
 }
-""" % bit_params
+""" % bit_params)
 
 def emit_func_longword(name, field, params):
 	bit_params = dict(name=name, field=field, word_start=int(params))
-	print """static inline ata_longword_t ata_get_%(name)s_%(field)s(const char *buf) {
+	print("""static inline ata_longword_t ata_get_%(name)s_%(field)s(const char *buf) {
 	return ata_get_longword(buf, %(word_start)d);
 }
-""" % bit_params
+""" % bit_params)
 
 kinds = {
 	'bit': emit_func_bit,
@@ -32,8 +32,8 @@ kinds = {
 }
 
 def emit_header_single(name, struct):
-	for field, info in struct.items():
-		keys = info.keys()
+	for field, info in list(struct.items()):
+		keys = list(info.keys())
 		assert(len(keys) == 1)
 		kind = keys[0]
 		params = info[kind]
@@ -41,17 +41,17 @@ def emit_header_single(name, struct):
 		kinds[kind](name, field, params)
 
 def emit_header(structs):
-	for name, struct in structs.items():
+	for name, struct in list(structs.items()):
 		emit_header_single(name, struct)
 
 def emit_prefix():
-	print '/* Generated file, do not edit */'
-	print '#ifndef ATA_PARSE_H'
-	print '#define ATA_PARSE_H'
-	print '#include "ata.h"'
+	print('/* Generated file, do not edit */')
+	print('#ifndef ATA_PARSE_H')
+	print('#define ATA_PARSE_H')
+	print('#include "ata.h"')
 
 def emit_suffix():
-	print '#endif'
+	print('#endif')
 
 def convert_def(filename):
 	f = file(filename)

@@ -5,19 +5,19 @@ import yaml
 
 def emit_func_bit(name, field, params):
 	bit_params = dict(name=name, field=field, word=int(params[0]), bit=int(params[1]))
-	print 'printf("%%-40s: %%s\\n", "%(field)s", ata_get_%(name)s_%(field)s(buf) ? "true" : "false");' % bit_params
+	print('printf("%%-40s: %%s\\n", "%(field)s", ata_get_%(name)s_%(field)s(buf) ? "true" : "false");' % bit_params)
 
 def emit_func_string(name, field, params):
 	bit_params = dict(name=name, field=field, word_start=int(params[0]), word_end=int(params[1]))
-	print '{'
-	print 'char outbuf[1024];'
-	print 'ata_get_%(name)s_%(field)s(buf, outbuf);' % bit_params
-	print 'printf("%%-40s: %%s\\n", "%(field)s", outbuf);' % bit_params
-	print '}'
+	print('{')
+	print('char outbuf[1024];')
+	print('ata_get_%(name)s_%(field)s(buf, outbuf);' % bit_params)
+	print('printf("%%-40s: %%s\\n", "%(field)s", outbuf);' % bit_params)
+	print('}')
 
 def emit_func_longword(name, field, params):
 	bit_params = dict(name=name, field=field, word_start=int(params))
-	print 'printf("%%-40s: %%u\\n", "%(field)s", ata_get_%(name)s_%(field)s(buf));' % bit_params
+	print('printf("%%-40s: %%u\\n", "%(field)s", ata_get_%(name)s_%(field)s(buf));' % bit_params)
 
 kinds = {
 	'bit': emit_func_bit,
@@ -26,12 +26,12 @@ kinds = {
 }
 
 def emit_header_single(name, struct):
-	field_names = struct.keys()
+	field_names = list(struct.keys())
 	field_names.sort()
 
 	for field in field_names:
 		info = struct[field]
-		keys = info.keys()
+		keys = list(info.keys())
 		assert(len(keys) == 1)
 		kind = keys[0]
 		params = info[kind]
@@ -39,19 +39,19 @@ def emit_header_single(name, struct):
 		kinds[kind](name, field, params)
 
 def emit_header(structs):
-	for name, struct in structs.items():
-		print 'void dump_%s(const char *buf)' % name
-		print '{'
+	for name, struct in list(structs.items()):
+		print('void dump_%s(const char *buf)' % name)
+		print('{')
 		emit_header_single(name, struct)
-		print '}'
+		print('}')
 
 def emit_prefix():
-	print '#include "ata.h"'
-	print '#include "ata_parse.h"'
-	print '#include <stdio.h>'
+	print('#include "ata.h"')
+	print('#include "ata_parse.h"')
+	print('#include <stdio.h>')
 
 def emit_suffix():
-	print
+	print()
 
 def convert_def(filename):
 	f = file(filename)

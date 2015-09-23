@@ -11,9 +11,9 @@ for line in sys.stdin:
         break
 
 # Read the raw data
-print '#ifndef LIBSCSICMD_ASC_NUM_LIST_H'
-print '#define LIBSCSICMD_ASC_NUM_LIST_H'
-print '#define ASC_NUM_LIST \\'
+print('#ifndef LIBSCSICMD_ASC_NUM_LIST_H')
+print('#define LIBSCSICMD_ASC_NUM_LIST_H')
+print('#define ASC_NUM_LIST \\')
 for line in sys.stdin:
     line = line.strip()
     asc = int(line[0:2], 16)
@@ -28,8 +28,8 @@ for line in sys.stdin:
 
     if ascq == 'NN':
         name_nn = nn_str(name)
-        print 'SENSE_CODE_KEYED(0x%x, "%s") \\' % (asc, name_nn)
+        print('SENSE_CODE_KEYED(0x%x, "%s") \\' % (asc, name_nn))
     else:
-        print 'SENSE_CODE(0x%x, 0x%x, "%s") \\' % (asc, ascq, name)
-print
-print '#endif'
+        print('SENSE_CODE(0x%x, 0x%x, "%s") \\' % (asc, ascq, name))
+print()
+print('#endif')
