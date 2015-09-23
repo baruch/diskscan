@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import xml.etree.ElementTree as ET
 import sys
@@ -59,7 +59,7 @@ def validate_attr(d, root):
             code = names.get(name)
         elif child.tag == 'raw':
             val = child.text.strip()
-            assert val in raw_types.keys()
+            assert val in list(raw_types.keys())
             raw = val
         d[aid] = (aid, name, raw, code)
 
@@ -69,32 +69,32 @@ nodes = {
 }
 
 for child in root:
-    if child.tag not in nodes.keys():
+    if child.tag not in list(nodes.keys()):
         raise 'tag %s is unknown at smartdb level' % child.tag
     vfunc = nodes.get(child.tag)
     for subchild in child:
         vfunc(defaults, subchild)
 
-print '#include "smartdb.h"'
+print('#include "smartdb.h"')
 
-print 'static const smart_table_t defaults = {'
-print '.num_attrs = %d,' % len(defaults)
-print '.attrs = {'
-keys = defaults.keys()
+print('static const smart_table_t defaults = {')
+print('.num_attrs = %d,' % len(defaults))
+print('.attrs = {')
+keys = list(defaults.keys())
 keys.sort()
 for aid in keys:
     attr = defaults[aid]
     name = attr[1]
     raw = raw_type_to_enum(attr[2])
     atype = attr_code_to_enum(attr[3])
-    print '{.id=%d, .type=%s, .name="%s", .raw=%s},' % (aid, atype, name, raw)
-print '}'
-print '};'
+    print('{.id=%d, .type=%s, .name="%s", .raw=%s},' % (aid, atype, name, raw))
+print('}')
+print('};')
 
-print 'const smart_table_t * smart_table_for_disk(const char *vendor, const char *model, const char *firmware)'
-print '{'
-print '(void)vendor;'
-print '(void)model;'
-print '(void)firmware;'
-print 'return &defaults;'
-print '}'
+print('const smart_table_t * smart_table_for_disk(const char *vendor, const char *model, const char *firmware)')
+print('{')
+print('(void)vendor;')
+print('(void)model;')
+print('(void)firmware;')
+print('return &defaults;')
+print('}')

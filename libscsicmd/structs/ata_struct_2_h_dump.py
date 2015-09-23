@@ -4,15 +4,15 @@ import sys
 import yaml
 
 def emit_header(structs):
-	for name, struct in structs.items():
-		print 'void dump_%s(const char *buf);' % name
+	for name, struct in list(structs.items()):
+		print('void dump_%s(const char *buf);' % name)
 
 def emit_prefix():
-	print '#ifndef _DUMP_H_'
-	print '#define _DUMP_H_'
+	print('#ifndef _DUMP_H_')
+	print('#define _DUMP_H_')
 
 def emit_suffix():
-	print '#endif'
+	print('#endif')
 
 def convert_def(filename):
 	f = file(filename)
