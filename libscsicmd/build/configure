@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 lib_srcs = [
-        'cdb.c', 'parse_inquiry.c', 'ata.c', 'parse_sense.c', 'parse_read_cap.c', 'str_map.c',
-        '../smartdb/smartdb.c', '../smartdb/smartdb_gen.c',
+        'cdb.c', 'parse_inquiry.c', 'ata.c', 'parse_sense.c', 'parse_read_cap.c', 'str_map.c', 'ata_smart.c',
+        'smartdb/smartdb.c', 'smartdb/smartdb_gen.c',
 ]
 
 test_srcs = {
@@ -15,7 +15,7 @@ test_srcs = {
         #'ata_identify': ['ata_identify_dump.c'],
 }
 
-cflags = ['-Iinclude', '-Ismartdb', '-g', '-O0', '-Wall', '-Werror', '-Wextra', '-Wshadow',
+cflags = ['-Iinclude', '-g', '-O0', '-Wall', '-Werror', '-Wextra', '-Wshadow',
           '-Wmissing-prototypes', '-Winit-self', '-pipe', '-D_GNU_SOURCE',
           '-D_FORTIFY_SOURCE=2']
 ldflags = []
@@ -138,7 +138,7 @@ n.rule('script',
 )
 n.newline()
 
-smartdb_gen_c = script('smartdb/smartdb_gen.c', 'smartdb/smartdb.xml', 'smartdb/smartdb_gen_c.py')
+smartdb_gen_c = script('src/smartdb/smartdb_gen.c', 'src/smartdb/smartdb.xml', 'src/smartdb/smartdb_gen_c.py')
 ata_parse_h = script('include/ata_parse.h', 'structs/ata_identify.yaml', 'structs/ata_struct_2_h.py')
 
 lib_objs = []

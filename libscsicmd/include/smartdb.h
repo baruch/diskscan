@@ -12,6 +12,7 @@ typedef enum smart_attr_type {
 	SMART_ATTR_TYPE_TEMP,
 	SMART_ATTR_TYPE_REALLOC,
 	SMART_ATTR_TYPE_REALLOC_PENDING,
+	SMART_ATTR_TYPE_CRC_ERRORS,
 } smart_attr_type_e;
 
 typedef enum smart_attr_raw {
@@ -23,6 +24,7 @@ struct smart_attr {
 	uint8_t id;
 	smart_attr_type_e type;
 	smart_attr_raw_e raw;
+	int offset;
 	const char *name;
 };
 
@@ -33,5 +35,6 @@ struct smart_table {
 
 const smart_table_t *smart_table_for_disk(const char *vendor, const char *model, const char *firmware);
 const smart_attr_t *smart_attr_for_id(const smart_table_t *table, uint8_t id);
+const smart_attr_t *smart_attr_for_type(const smart_table_t *table, smart_attr_type_e attr_type);
 
 #endif
