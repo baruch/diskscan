@@ -9,7 +9,7 @@ tests.ninja
 tags
 libscsicmd.a
 include/ata_parse.h
-smartdb/smartdb_gen.c
+smartdb_gen.c
 ata_identify
 test/ata_identify_dump.[ch]
 ata_smart_return_status

@@ -4,7 +4,7 @@
     <name>Throughput Performance</name>
     <name>Spin Up Time</name>
     <name>Start/Stop Count</name>
-    <name>Reallocated Sectors Count</name>
+    <name type="reallocations">Reallocated Sectors Count</name>
     <name>Seek Error Rate</name>
     <name>Seek Time Performance</name>
     <name type="poh">Power On Hours</name>
@@ -14,10 +14,10 @@
     <name>Power Off Retract Count</name>
     <name>Load/Unload Cycle Count</name>
     <name type="temperature">Temperature</name>
-    <name type="reallocations">Reallocation Event Count</name>
+    <name>Reallocation Event Count</name>
     <name type="pending_reallocations">Pending Sector Reallocation Count</name>
     <name>Off-Line Scan Uncorrecable Sector Count</name>
-    <name>CRC Error Count</name>
+    <name type="crc_count">CRC Error Count</name>
     <name>Total LBAs Written</name>
     <name>Multi-zone Error Rate</name>
     <name>Drive Calibration Retry Count</name>
@@ -93,6 +93,7 @@
     <attr>
       <id>194</id>
       <name>Temperature</name>
+      <tempoffset>150</tempoffset>
     </attr>
     <attr>
       <id>195</id>

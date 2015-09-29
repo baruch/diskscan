@@ -25,10 +25,15 @@ attr_code = {
     'temperature': 'SMART_ATTR_TYPE_TEMP',
     'reallocations': 'SMART_ATTR_TYPE_REALLOC',
     'pending_reallocations': 'SMART_ATTR_TYPE_REALLOC_PENDING',
+    'crc_count': 'SMART_ATTR_TYPE_CRC_ERRORS',
 }
 attr_code_default = 'none'
 def attr_code_to_enum(code):
-    return attr_code.get(code)
+    try:
+        return attr_code[code]
+    except KeyError:
+        sys.stderr.write('Cannot find key "%s" in the known attribute code list: %s\n' % (code, attr_code.keys()))
+        raise
 
 def validate_name(c, root):
     assert root.tag == 'name'
@@ -43,10 +48,11 @@ def validate_attr(d, root):
     assert root.tag == 'attr'
     aid = None
     name = None
+    tempoffset = -1
     raw = raw_type_default
     code = attr_code_default
     for child in root:
-        assert child.tag in ('id', 'name', 'raw')
+        assert child.tag in ('id', 'name', 'raw', 'tempoffset')
         if child.tag == 'id':
             val = int(child.text)
             assert val > 0
@@ -61,7 +67,11 @@ def validate_attr(d, root):
             val = child.text.strip()
             assert val in list(raw_types.keys())
             raw = val
-        d[aid] = (aid, name, raw, code)
+        elif child.tag == 'tempoffset':
+            val = int(child.text)
+            assert val > 0 and val < 255
+            tempoffset = val
+        d[aid] = (aid, name, raw, code, tempoffset)
 
 nodes = {
         'names': validate_name,
@@ -87,7 +97,8 @@ for aid in keys:
     name = attr[1]
     raw = raw_type_to_enum(attr[2])
     atype = attr_code_to_enum(attr[3])
-    print('{.id=%d, .type=%s, .name="%s", .raw=%s},' % (aid, atype, name, raw))
+    tempoffset = attr[4]
+    print('{.id=%d, .type=%s, .name="%s", .raw=%s, .offset=%d},' % (aid, atype, name, raw, tempoffset))
 print('}')
 print('};')
 
