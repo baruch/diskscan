@@ -176,7 +176,7 @@ void disk_dev_close(disk_dev_t *dev)
 ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res)
 {
 	unsigned char cdb[32];
-	unsigned char sense[256];
+	unsigned char sense[128];
 	int cdb_len;
 	unsigned buf_read = 0;
 	unsigned sense_read = 0;
@@ -202,7 +202,7 @@ ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes
 ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res)
 {
 	unsigned char cdb[32];
-	unsigned char sense[256];
+	unsigned char sense[128];
 	int cdb_len;
 	unsigned buf_read = 0;
 	unsigned sense_read = 0;
@@ -229,7 +229,7 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 {
 	unsigned char cdb[32];
 	unsigned char buf[512];
-	unsigned char sense[256];
+	unsigned char sense[128];
 	int cdb_len;
 	unsigned buf_read = 0;
 	unsigned sense_read = 0;
@@ -279,7 +279,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 {
 	unsigned char cdb[32];
 	unsigned char buf[512];
-	unsigned char sense[256];
+	unsigned char sense[128];
 	int cdb_len;
 	unsigned buf_read = 0;
 	unsigned sense_read = 0;
@@ -338,7 +338,7 @@ int disk_dev_smart_trip(disk_dev_t *dev)
 	int cdb_len;
 	unsigned char cdb[32];
 	unsigned char buf[512];
-	unsigned char sense[256];
+	unsigned char sense[128];
 	unsigned buf_read = 0;
 	unsigned sense_read = 0;
 	int ret;
