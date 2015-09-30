@@ -73,6 +73,7 @@ typedef struct disk_t {
 	char fw_rev[64];
 	char serial[64];
 	bool is_ata;
+	bool is_smart_tripped;
 	unsigned char ata_buf[512];
 	unsigned ata_buf_len;
 	uint64_t num_bytes;

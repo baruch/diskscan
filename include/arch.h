@@ -36,6 +36,12 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size);
 int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata, unsigned char *ata_buf, unsigned *ata_buf_len);
 
+/** Check if the disk had a smart trip, only relevant for ATA disks.
+ *
+ * Returns -1 on error, 0 if there is no smart trip and 1 if there is a smart trip.
+ */
+int disk_dev_smart_trip(disk_dev_t *dev);
+
 void mac_read(unsigned char *buf, int len);
 
 #include "arch-internal.h"

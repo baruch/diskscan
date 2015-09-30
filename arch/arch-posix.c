@@ -69,3 +69,8 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 
 	//TODO: Handle EINTR with a retry
 }
+
+int disk_dev_smart_trip(disk_dev_t *dev)
+{
+	return -1;
+}

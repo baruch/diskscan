@@ -333,6 +333,29 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	return 0;
 }
 
+int disk_dev_smart_trip(disk_dev_t *dev)
+{
+	int cdb_len;
+	unsigned char cdb[32];
+	unsigned char buf[512];
+	unsigned char sense[256];
+	unsigned buf_read = 0;
+	unsigned sense_read = 0;
+	int ret;
+	io_result_t io_res;
+	bool smart_ok;
+
+	cdb_len = cdb_ata_smart_return_status(cdb);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	if (ret < 0)
+		return -1;
+
+	if (!ata_smart_return_status_result(sense, sense_read, &smart_ok))
+		return -1;
+
+	return smart_ok ? 0 : 1;
+}
+
 void mac_read(unsigned char *buf, int len)
 {
 	struct ifreq ifr;
