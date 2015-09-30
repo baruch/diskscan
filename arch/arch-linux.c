@@ -76,6 +76,77 @@ static enum result_error_e sense_to_error(sense_info_t *info)
 	return ERROR_UNKNOWN;
 }
 
+static const char *host_status_to_str(int host_status)
+{
+	switch (host_status) {
+		case 0x00: return "DID_OK: No error";
+		case 0x01: return "DID_NO_CONNECT: Couldn't connect before timeout period";
+		case 0x02: return "DID_BUS_BUSY: BUS stayed busy through time out period";
+		case 0x03: return "DID_TIME_OUT: TIMED OUT for other reason";
+		case 0x04: return "DID_BAD_TARGET: BAD target";
+		case 0x05: return "DID_ABORT: Told to abort for some other reason";
+		case 0x06: return "DID_PARITY: Parity error";
+		case 0x07: return "DID_ERROR: internal error";
+		case 0x08: return "DID_RESET: Reset by somebody";
+		case 0x09: return "DID_BAD_INTR: Got an interrupt we weren't expecting";
+		default: return "Unknown host status";
+	}
+}
+
+static const char *driver_status_low_to_str(int driver_status)
+{
+	switch (driver_status) {
+		case 0x00: return "DRIVER_OK: No error";
+		case 0x01: return "DRIVER_BUSY: not used";
+		case 0x02: return "DRIVER_SOFT: not used";
+		case 0x03: return "DRIVER_MEDIA: not used";
+		case 0x04: return "DRIVER_ERROR: internal driver error";
+		case 0x05: return "DRIVER_INVALID: finished (DID_BAD_TARGET or DID_ABORT)";
+		case 0x06: return "DRIVER_TIMEOUT: finished with timeout";
+		case 0x07: return "DRIVER_HARD: finished with fatal error";
+		case 0x08: return "DRIVER_SENSE: had sense information available";
+		default: return "Unknown driver status";
+	}
+}
+
+static const char *driver_status_high_to_str(int driver_status)
+{
+	switch (driver_status) {
+		case 0: return "No suggestion";
+		case 0x10: return "SUGGEST_RETRY: retry the SCSI request";
+		case 0x20: return "SUGGEST_ABORT: abort the request";
+		case 0x30: return "SUGGEST_REMAP: remap the block (not yet implemented)";
+		case 0x40: return "SUGGEST_DIE: let the kernel panic";
+		case 0x80: return "SUGGEST_SENSE: get sense information from the device";
+		case 0xff: return "SUGGEST_IS_OK: nothing to be done";
+		default: return "Unknown suggestion";
+	}
+}
+
+static const char *status_code_to_str(int status)
+{
+	switch (status) {
+		case 0x00: return "GOOD";
+		case 0x01: return "CHECK_CONDITION";
+		case 0x02: return "CONDITION_GOOD";
+		case 0x04: return "BUSY";
+		case 0x08: return "INTERMEDIATE_GOOD";
+		case 0x0a: return "INTERMEDIATE_C_GOOD";
+		case 0x0c: return "RESERVATION_CONFLICT";
+		default: return "Unknown status";
+	}
+}
+
+static const char *driver_status_to_str(int driver_status)
+{
+	static char buf[256];
+
+	snprintf(buf, sizeof(buf), "%s %s",
+			driver_status_low_to_str(driver_status & 0x0F),
+			driver_status_high_to_str(driver_status & 0xF0));
+	return buf;
+}
+
 static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 		unsigned char *buf, unsigned buf_len,
 		int dxfer_direction,
@@ -116,11 +187,11 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 #if 0
 	if (hdr.status || hdr.driver_status || hdr.msg_status || hdr.host_status || hdr.sb_len_wr)
 	{
-		printf("status: %d\n", hdr.status);
+		printf("status: %d %s\n", hdr.status, status_code_to_str(hdr.status));
 		printf("masked status: %d\n", hdr.masked_status);
-		printf("driver status: %d\n", hdr.driver_status);
+		printf("driver status: %d %s\n", hdr.driver_status, driver_status_to_str(hdr.driver_status));
 		printf("msg status: %d\n", hdr.msg_status);
-		printf("host status: %d\n", hdr.host_status);
+		printf("host status: %d = %s\n", hdr.host_status, host_status_to_str(hdr.host_status));
 		printf("sense len: %d\n", hdr.sb_len_wr);
 	}
 #endif
@@ -152,7 +223,12 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 
 	if (hdr.status != 0) {
 		// No sense but we have an error, consider it fatal
-		ERROR("IO failed with no sense: status=%d mask=%d driver=%d msg=%d host=%d", hdr.status, hdr.masked_status, hdr.driver_status, hdr.msg_status, hdr.host_status);
+		ERROR("IO failed with no sense: status=%d (%s) mask=%d driver=%d (%s) msg=%d host=%d (%s)",
+				hdr.status, status_code_to_str(hdr.status),
+				hdr.masked_status,
+				hdr.driver_status, driver_status_to_str(hdr.driver_status),
+				hdr.msg_status,
+				hdr.host_status, host_status_to_str(hdr.host_status));
 		io_res->error = ERROR_UNKNOWN;
 		return 0;
 	}
