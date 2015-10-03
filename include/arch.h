@@ -31,16 +31,15 @@ typedef struct {
 
 bool disk_dev_open(disk_dev_t *dev, const char *path);
 void disk_dev_close(disk_dev_t *dev);
+void disk_dev_cdb_out(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read,
+		unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res);
+void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read,
+		unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res);
+
 ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res);
 ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res);
 int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_size);
 int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, char *serial, bool *is_ata, unsigned char *ata_buf, unsigned *ata_buf_len);
-
-/** Check if the disk had a smart trip, only relevant for ATA disks.
- *
- * Returns -1 on error, 0 if there is no smart trip and 1 if there is a smart trip.
- */
-int disk_dev_smart_trip(disk_dev_t *dev);
 
 void mac_read(unsigned char *buf, int len);
 

@@ -249,6 +249,16 @@ void disk_dev_close(disk_dev_t *dev)
 	dev->fd = -1;
 }
 
+void disk_dev_cdb_out(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
+{
+	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_TO_DEV, sense, sense_size, buf_read, sense_read, io_res);
+}
+
+void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
+{
+	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_FROM_DEV, sense, sense_size, buf_read, sense_read, io_res);
+}
+
 ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res)
 {
 	unsigned char cdb[32];
@@ -407,29 +417,6 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	*ata_buf_len = buf_read;
 
 	return 0;
-}
-
-int disk_dev_smart_trip(disk_dev_t *dev)
-{
-	int cdb_len;
-	unsigned char cdb[32];
-	unsigned char buf[512];
-	unsigned char sense[128];
-	unsigned buf_read = 0;
-	unsigned sense_read = 0;
-	int ret;
-	io_result_t io_res;
-	bool smart_ok;
-
-	cdb_len = cdb_ata_smart_return_status(cdb);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
-	if (ret < 0)
-		return -1;
-
-	if (!ata_smart_return_status_result(sense, sense_read, &smart_ok))
-		return -1;
-
-	return smart_ok ? 0 : 1;
 }
 
 void mac_read(unsigned char *buf, int len)

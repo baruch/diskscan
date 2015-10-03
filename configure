@@ -5,7 +5,7 @@ import platform
 version = '0.16'
 
 lib_srcs = [
-        'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c',
+        'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c', 'lib/disk.c',
 ]
 
 arch_freebsd = {'src': 'arch/arch-freebsd.c', 'h': 'arch/arch-posix.h'}
