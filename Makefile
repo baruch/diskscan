@@ -18,6 +18,7 @@ build: build.ninja
 
 clean:
 	ninja -t clean
+	-rm -rf .ninja_deps .ninja_log libscsicmd/*.ninja libscsicmd/build/*.pyc
 
 install: diskscan Documentation/diskscan.1
 	install -m 0755 diskscan $(DESTDIR)$(PREFIX)/bin/diskscan
