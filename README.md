@@ -19,10 +19,10 @@ Also, badblocks is essentially obsolete in this day and age since the disks them
 
 ## Build
 
-This project is using [redo][1] and includes the minimal do program as a
-replacement if you don't have the full redo installed. As a shortcut for those
-who are used to the traditional Make there is a Makefile provided that does the
-right thing.
+This project is using [ninja-build][1] you need to get ninja-build for your system, on Debian/Ubuntu it is as simple as:
+    apt-get install ninja-build
+
+A Makefile is provided to avoid learning the ninja commands and do the non-build stuff (install, etc.)
 
 ## Install
 
@@ -35,4 +35,4 @@ You can control the DESTDIR when building packages and PREFIX if /usr is not rig
 DiskScan is licensed under the GPL version 3 or later.
 
 
- [1]: https://github.com/apenwarr/redo
+ [1]: https://martine.github.io/ninja/
