@@ -17,7 +17,7 @@ build: build.ninja
 	@if [ "${V}" = 1 ]; then ninja -v; else ninja; fi
 
 clean:
-	ninja -t clean
+	[ -e ninja.build ] && ninja -t clean
 	-rm -rf .ninja_deps .ninja_log libscsicmd/*.ninja libscsicmd/build/*.pyc
 
 install: diskscan Documentation/diskscan.1
