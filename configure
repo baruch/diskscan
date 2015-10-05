@@ -147,7 +147,7 @@ n.rule('link',
 n.newline()
 
 n.rule('symlink',
-        command='ln -s ../$in $out',
+        command='ln -sf ../$in $out',
         description='SYMLINK $out -> $in')
 n.newline()
 
