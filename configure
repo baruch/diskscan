@@ -1,8 +1,12 @@
 #!/usr/bin/python
 
-import platform
-
 version = '0.16'
+
+import platform
+from optparse import OptionParser
+parser = OptionParser(version="diskscan configure " + version, usage='Usage: %prog [options]')
+parser.add_option('-d', '--dev', dest='dev', help='Add developer options', action="store_true", default=False)
+(options, args) = parser.parse_args()
 
 lib_srcs = [
         'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c', 'lib/disk.c',
@@ -27,10 +31,13 @@ executables = {
         'diskscan': cli_srcs,
 }
 
-cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-g', '-O0', '-Wall', '-Werror', '-Wextra', '-Wshadow',
+cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-g', '-O3', '-Wall', '-Wextra', '-Wshadow',
           '-Wmissing-prototypes', '-Winit-self', '-pipe', '-D_GNU_SOURCE',
           '-D_FORTIFY_SOURCE=2', '-DVERSION="%s"' % version]
 ldflags = []
+
+if options.dev:
+    cflags.append('-Werror')
 
 import os, os.path
 import glob
