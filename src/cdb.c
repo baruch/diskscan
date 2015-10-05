@@ -106,6 +106,30 @@ int cdb_write_10(unsigned char *cdb, bool fua, uint64_t lba, uint16_t transfer_l
 	return LEN;
 }
 
+int cdb_read_16(unsigned char *cdb, bool fua, bool fua_nv, bool dpo, uint64_t lba, uint32_t transfer_length_blocks)
+{
+	const int LEN = 16;
+	cdb[0] = 0x88;
+	cdb[1] = (dpo<<4) | (fua<<3) | (fua_nv<<1);
+	set_uint64(cdb, 2, lba);
+	set_uint32(cdb, 10, transfer_length_blocks);
+	cdb[14] = 0;
+	cdb[15] = 0;
+	return LEN;
+}
+
+int cdb_write_16(unsigned char *cdb, bool dpo, bool fua, bool fua_nv, uint64_t lba, uint32_t transfer_length_blocks)
+{
+	const int LEN = 16;
+	cdb[0] = 0x8A;
+	cdb[1] = (dpo<<4) | (fua<<3) | (fua_nv<<1);
+	set_uint64(cdb, 2, lba);
+	set_uint32(cdb, 10, transfer_length_blocks);
+	cdb[14] = 0;
+	cdb[15] = 0;
+	return LEN;
+}
+
 int cdb_log_sense(unsigned char *cdb, uint8_t page_code, uint8_t subpage_code, uint16_t alloc_len)
 {
 	const int LEN = 10;

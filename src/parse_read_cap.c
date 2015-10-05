@@ -19,13 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-static inline void get_uint16(unsigned char *buf, int start, uint16_t *val)
-{
-	*val = (uint16_t)buf[start] << 8 |
-		   (uint16_t)buf[start+1];
-}
-
 static inline void get_uint32(unsigned char *buf, int start, uint32_t *val)
 {
 	*val = (uint32_t)buf[start] << 24 |
