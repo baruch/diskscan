@@ -72,6 +72,48 @@ enum scan_mode str_to_scan_mode(const char *s)
 	return SCAN_MODE_UNKNOWN;
 }
 
+static void disk_ata_monitor_start(disk_t *disk)
+{
+	if (disk_smart_trip(&disk->dev) == 1) {
+		ERROR("Disk has a SMART TRIP at the start of the test, it should be discarded anyhow");
+		disk->state.ata.is_smart_tripped = true;
+	} else {
+		disk->state.ata.is_smart_tripped = false;
+	}
+}
+
+static void disk_ata_monitor(disk_t *disk)
+{
+	if (!disk->state.ata.is_smart_tripped && disk_smart_trip(&disk->dev) == 1) {
+		ERROR("Disk has a SMART TRIP in the middle of the test, it should be discarded!");
+		disk->state.ata.is_smart_tripped = true;
+	}
+}
+
+static void disk_ata_monitor_end(disk_t *disk)
+{
+	if (disk_smart_trip(&disk->dev) == 1) {
+		ERROR("Disk has a SMART TRIP at the end of the test, it should be discarded!");
+	} else if (disk->state.ata.is_smart_tripped) {
+		ERROR("Disk had a SMART TRIP during the test but it disappeared. This is super weird!!!");
+	}
+}
+
+static void disk_scsi_monitor_start(disk_t *disk)
+{
+	(void)disk;
+}
+
+static void disk_scsi_monitor(disk_t *disk)
+{
+	(void)disk;
+}
+
+static void disk_scsi_monitor_end(disk_t *disk)
+{
+	(void)disk;
+}
+
 int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len)
 {
 	memset(disk, 0, sizeof(*disk));
@@ -131,12 +173,10 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 		goto Error;
 	}
 
-	if (disk->is_ata && disk_smart_trip(&disk->dev) == 1) {
-		ERROR("Disk has a SMART TRIP at the start of the test, it should be discarded anyhow");
-		disk->state.ata.is_smart_tripped = true;
-	} else {
-		disk->state.ata.is_smart_tripped = false;
-	}
+	if (disk->is_ata)
+		disk_ata_monitor_start(disk);
+	else
+		disk_scsi_monitor_start(disk);
 
 	INFO("Opened disk %s sector size %"PRIu64" num bytes %"PRIu64, path, disk->sector_size, disk->num_bytes);
 	return 0;
@@ -148,9 +188,10 @@ Error:
 
 int disk_close(disk_t *disk)
 {
-	if (disk->is_ata && disk_smart_trip(&disk->dev) == 1) {
-		ERROR("Disk has a SMART TRIP at the end of the test, it should be discarded!");
-	}
+	if (disk->is_ata)
+		disk_ata_monitor_end(disk);
+	else
+		disk_scsi_monitor_end(disk);
 
 	INFO("Closed disk %s", disk->path);
 	disk_dev_close(&disk->dev);
@@ -525,11 +566,10 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 			break;
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
 
-		if (disk->is_ata && !disk->state.ata.is_smart_tripped && disk_smart_trip(&disk->dev) == 1) {
-			ERROR("Disk has a SMART TRIP in the middle of the test, it should be discarded!");
-			disk->state.ata.is_smart_tripped = true;
-		}
-
+		if (disk->is_ata)
+			disk_ata_monitor(disk);
+		else
+			disk_scsi_monitor(disk);
 	}
 
 	if (!disk->run) {
