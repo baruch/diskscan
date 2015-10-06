@@ -133,9 +133,9 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 
 	if (disk->is_ata && disk_smart_trip(&disk->dev) == 1) {
 		ERROR("Disk has a SMART TRIP at the start of the test, it should be discarded anyhow");
-		disk->is_smart_tripped = true;
+		disk->state.ata.is_smart_tripped = true;
 	} else {
-		disk->is_smart_tripped = false;
+		disk->state.ata.is_smart_tripped = false;
 	}
 
 	INFO("Opened disk %s sector size %"PRIu64" num bytes %"PRIu64, path, disk->sector_size, disk->num_bytes);
@@ -525,9 +525,9 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 			break;
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
 
-		if (disk->is_ata && !disk->is_smart_tripped && disk_smart_trip(&disk->dev) == 1) {
+		if (disk->is_ata && !disk->state.ata.is_smart_tripped && disk_smart_trip(&disk->dev) == 1) {
 			ERROR("Disk has a SMART TRIP in the middle of the test, it should be discarded!");
-			disk->is_smart_tripped = true;
+			disk->state.ata.is_smart_tripped = true;
 		}
 
 	}

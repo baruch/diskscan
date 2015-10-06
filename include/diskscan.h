@@ -65,6 +65,13 @@ typedef struct data_log_t {
 	bool is_first;
 } data_log_t;
 
+typedef struct ata_state_t {
+	bool is_smart_tripped;
+} ata_state_t;
+
+typedef struct scsi_state_t {
+} scsi_state_t;
+
 typedef struct disk_t {
 	disk_dev_t dev;
 	char path[128];
@@ -73,7 +80,10 @@ typedef struct disk_t {
 	char fw_rev[64];
 	char serial[64];
 	bool is_ata;
-	bool is_smart_tripped;
+	union {
+		ata_state_t ata;
+		scsi_state_t scsi;
+	} state;
 	unsigned char ata_buf[512];
 	unsigned ata_buf_len;
 	uint64_t num_bytes;
