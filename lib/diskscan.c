@@ -25,6 +25,8 @@
 #include "median.h"
 #include "compiler.h"
 #include "data.h"
+#include "libscsicmd/include/smartdb.h"
+#include "libscsicmd/include/ata_smart.h"
 
 #include <sched.h>
 #include <memory.h>
@@ -80,13 +82,51 @@ static void disk_ata_monitor_start(disk_t *disk)
 	} else {
 		disk->state.ata.is_smart_tripped = false;
 	}
+
+	disk->state.ata.smart_table = smart_table_for_disk(disk->vendor, disk->model, disk->fw_rev);
+	if (disk->state.ata.smart_table == NULL)
+		ERROR("BUG! Failed to setup smart table for the disk.");
+
+	disk->state.ata.smart_num = disk_smart_attributes(&disk->dev, disk->state.ata.smart, ARRAY_SIZE(disk->state.ata.smart));
+
+	if (disk->state.ata.smart_num > 0) {
+		int min_temp = -1;
+		int max_temp = -1;
+		int temp = ata_smart_get_temperature(disk->state.ata.smart, disk->state.ata.smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
+		disk->state.ata.last_temp = temp;
+
+		if (min_temp > 0 || max_temp > 0)
+			INFO("Disk start temperature is %d (lifetime min %d and lifetime max %d)", temp, min_temp, max_temp);
+		else
+			INFO("Disk start temperature is %d", temp);
+	} else {
+		ERROR("Failed to read SMART attributes from device");
+	}
 }
 
 static void disk_ata_monitor(disk_t *disk)
 {
+	ata_smart_attr_t smart[MAX_SMART_ATTRS];
+	int smart_num;
+
 	if (!disk->state.ata.is_smart_tripped && disk_smart_trip(&disk->dev) == 1) {
 		ERROR("Disk has a SMART TRIP in the middle of the test, it should be discarded!");
 		disk->state.ata.is_smart_tripped = true;
+	}
+
+	smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+
+	if (smart_num > 0) {
+		int min_temp = -1;
+		int max_temp = -1;
+		int temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
+
+		if (temp != disk->state.ata.last_temp) {
+			INFO("Disk temperature changed from %d to %d", disk->state.ata.last_temp, temp);
+			disk->state.ata.last_temp = temp;
+		}
+	} else {
+		ERROR("Failed to read SMART attributes from device");
 	}
 }
 

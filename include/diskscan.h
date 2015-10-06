@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "arch.h"
 
+#include "libscsicmd/include/ata.h"
+
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
 
 struct histogram_def_t {
@@ -67,6 +69,10 @@ typedef struct data_log_t {
 
 typedef struct ata_state_t {
 	bool is_smart_tripped;
+	const struct smart_table *smart_table;
+	ata_smart_attr_t smart[MAX_SMART_ATTRS];
+	int smart_num;
+	int last_temp;
 } ata_state_t;
 
 typedef struct scsi_state_t {
