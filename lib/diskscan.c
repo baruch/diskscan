@@ -41,6 +41,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#define TEMP_THRESHOLD 65
+
 struct scan_state {
 	uint32_t latency_bucket;
 	uint64_t latency_stride;
@@ -52,6 +54,31 @@ struct scan_state {
 	int progress_full;
 	unsigned num_unknown_errors;
 };
+
+typedef int spinner_t;
+
+static char spinner_form[] = {'|', '/', '-', '\\', '|', '/', '-', '\\'};
+
+static void spinner_init(spinner_t *spinner)
+{
+	printf("%c\r", spinner_form[0]);
+	*spinner = 1;
+	fflush(stdout);
+}
+
+static void spinner_update(spinner_t *spinner)
+{
+	printf("\r%c\r", spinner_form[*spinner]);
+	if (++(*spinner) == ARRAY_SIZE(spinner_form))
+		*spinner = 0;
+	fflush(stdout);
+}
+
+static void spinner_done(void)
+{
+	printf("\r                           \r");
+	fflush(stdout);
+}
 
 const char *conclusion_to_str(enum conclusion conclusion)
 {
@@ -124,6 +151,25 @@ static void disk_ata_monitor(disk_t *disk)
 		if (temp != disk->state.ata.last_temp) {
 			INFO("Disk temperature changed from %d to %d", disk->state.ata.last_temp, temp);
 			disk->state.ata.last_temp = temp;
+		}
+
+		if (temp >= TEMP_THRESHOLD) {
+			spinner_t spinner;
+			INFO("Pausing scan due to high disk temperature");
+			spinner_init(&spinner);
+			while (temp >= TEMP_THRESHOLD) {
+				sleep(1);
+				spinner_update(&spinner);
+				smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+				if (smart_num > 0) {
+					temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
+				} else {
+					ERROR("Failed to read temperature while paused!");
+					break;
+				}
+			}
+			spinner_done();
+			INFO("Finished pause, temperature is now %d", temp);
 		}
 	} else {
 		ERROR("Failed to read SMART attributes from device");
