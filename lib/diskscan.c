@@ -131,6 +131,37 @@ static void disk_ata_monitor_start(disk_t *disk)
 	}
 }
 
+static void ata_test_temp(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
+{
+	int min_temp = -1;
+	int max_temp = -1;
+	int temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
+
+	if (temp != disk->state.ata.last_temp) {
+		INFO("Disk temperature changed from %d to %d", disk->state.ata.last_temp, temp);
+		disk->state.ata.last_temp = temp;
+	}
+
+	if (temp >= TEMP_THRESHOLD) {
+		spinner_t spinner;
+		INFO("Pausing scan due to high disk temperature");
+		spinner_init(&spinner);
+		while (temp >= TEMP_THRESHOLD) {
+			sleep(1);
+			spinner_update(&spinner);
+			smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+			if (smart_num > 0) {
+				temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
+			} else {
+				ERROR("Failed to read temperature while paused!");
+				break;
+			}
+		}
+		spinner_done();
+		INFO("Finished pause, temperature is now %d", temp);
+	}
+}
+
 static void disk_ata_monitor(disk_t *disk)
 {
 	ata_smart_attr_t smart[MAX_SMART_ATTRS];
@@ -144,33 +175,7 @@ static void disk_ata_monitor(disk_t *disk)
 	smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
 
 	if (smart_num > 0) {
-		int min_temp = -1;
-		int max_temp = -1;
-		int temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
-
-		if (temp != disk->state.ata.last_temp) {
-			INFO("Disk temperature changed from %d to %d", disk->state.ata.last_temp, temp);
-			disk->state.ata.last_temp = temp;
-		}
-
-		if (temp >= TEMP_THRESHOLD) {
-			spinner_t spinner;
-			INFO("Pausing scan due to high disk temperature");
-			spinner_init(&spinner);
-			while (temp >= TEMP_THRESHOLD) {
-				sleep(1);
-				spinner_update(&spinner);
-				smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
-				if (smart_num > 0) {
-					temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
-				} else {
-					ERROR("Failed to read temperature while paused!");
-					break;
-				}
-			}
-			spinner_done();
-			INFO("Finished pause, temperature is now %d", temp);
-		}
+		ata_test_temp(disk, smart, smart_num);
 	} else {
 		ERROR("Failed to read SMART attributes from device");
 	}
