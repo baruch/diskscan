@@ -73,6 +73,8 @@ typedef struct ata_state_t {
 	ata_smart_attr_t smart[MAX_SMART_ATTRS];
 	int smart_num;
 	int last_temp;
+	int last_reallocs;
+	int last_pending_reallocs;
 } ata_state_t;
 
 typedef struct scsi_state_t {

@@ -117,6 +117,7 @@ static void disk_ata_monitor_start(disk_t *disk)
 	disk->state.ata.smart_num = disk_smart_attributes(&disk->dev, disk->state.ata.smart, ARRAY_SIZE(disk->state.ata.smart));
 
 	if (disk->state.ata.smart_num > 0) {
+		// First look at temperatures
 		int min_temp = -1;
 		int max_temp = -1;
 		int temp = ata_smart_get_temperature(disk->state.ata.smart, disk->state.ata.smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
@@ -126,6 +127,12 @@ static void disk_ata_monitor_start(disk_t *disk)
 			INFO("Disk start temperature is %d (lifetime min %d and lifetime max %d)", temp, min_temp, max_temp);
 		else
 			INFO("Disk start temperature is %d", temp);
+
+		// First look on reallocations
+		disk->state.ata.last_reallocs = ata_smart_get_num_reallocations(disk->state.ata.smart, disk->state.ata.smart_num,
+				disk->state.ata.smart_table);
+		disk->state.ata.last_pending_reallocs = ata_smart_get_num_pending_reallocations(disk->state.ata.smart, disk->state.ata.smart_num,
+				disk->state.ata.smart_table);
 	} else {
 		ERROR("Failed to read SMART attributes from device");
 	}
@@ -162,6 +169,26 @@ static void ata_test_temp(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
 	}
 }
 
+static void ata_test_reallocs(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
+{
+	int num_reallocs;
+	int num_pending_reallocs;
+
+	num_reallocs = ata_smart_get_num_reallocations(smart, smart_num, disk->state.ata.smart_table);
+	num_pending_reallocs = ata_smart_get_num_pending_reallocations(smart, smart_num, disk->state.ata.smart_table);
+
+	if (num_reallocs > disk->state.ata.last_reallocs) {
+		INFO("Number of reallocated sectors increased from %d to %d\n", disk->state.ata.last_reallocs, num_reallocs);
+		disk->state.ata.last_reallocs = num_reallocs;
+	}
+
+	if (num_pending_reallocs != disk->state.ata.last_pending_reallocs) {
+		INFO("Number of pending sectors for reallocations changed from %d to %d\n", disk->state.ata.last_pending_reallocs,
+				num_pending_reallocs);
+		disk->state.ata.last_pending_reallocs = num_pending_reallocs;
+	}
+}
+
 static void disk_ata_monitor(disk_t *disk)
 {
 	ata_smart_attr_t smart[MAX_SMART_ATTRS];
@@ -176,6 +203,7 @@ static void disk_ata_monitor(disk_t *disk)
 
 	if (smart_num > 0) {
 		ata_test_temp(disk, smart, smart_num);
+		ata_test_reallocs(disk, smart, smart_num);
 	} else {
 		ERROR("Failed to read SMART attributes from device");
 	}
