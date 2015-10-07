@@ -211,10 +211,27 @@ static void disk_ata_monitor(disk_t *disk)
 
 static void disk_ata_monitor_end(disk_t *disk)
 {
+	ata_smart_attr_t smart[MAX_SMART_ATTRS];
+	int smart_num;
+	int num_reallocs;
+	int num_pending_reallocs;
+
 	if (disk_smart_trip(&disk->dev) == 1) {
 		ERROR("Disk has a SMART TRIP at the end of the test, it should be discarded!");
 	} else if (disk->state.ata.is_smart_tripped) {
 		ERROR("Disk had a SMART TRIP during the test but it disappeared. This is super weird!!!");
+	}
+
+	smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+	num_reallocs = ata_smart_get_num_reallocations(smart, smart_num, disk->state.ata.smart_table);
+	num_pending_reallocs = ata_smart_get_num_pending_reallocations(smart, smart_num, disk->state.ata.smart_table);
+
+	if (num_pending_reallocs > 0) {
+		INFO("At the end of the test there are still some sectors pending reallocation, this is rather unexpected but can be lived with.");
+	}
+
+	if (num_reallocs > 1000) {
+		INFO("Number of reallocated sectors is above 1000, you should probably stop using this disk!");
 	}
 }
 
