@@ -23,6 +23,8 @@
 #include "compiler.h"
 #include "cli.h"
 
+#include "progressbar/include/progressbar.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <inttypes.h>
@@ -33,6 +35,7 @@
 #include <errno.h>
 
 static disk_t disk;
+static progressbar *bar;
 
 typedef struct options_t options_t;
 struct options_t {
@@ -69,8 +72,9 @@ static int usage(void) {
 
 void report_progress(disk_t * UNUSED(disk), int progress_part, int progress_full)
 {
-	printf("Progress: %4.1f%%\r", (float)progress_part * 100.0 / (float)progress_full);
-	fflush(stdout);
+	if (bar == NULL)
+		bar = progressbar_new("Disk scan", progress_full);
+	progressbar_update(bar, progress_part);
 }
 
 void report_scan_success(disk_t *UNUSED(disk), uint64_t UNUSED(offset_bytes), uint64_t UNUSED(data_size), uint64_t UNUSED(time))
@@ -147,6 +151,8 @@ void report_scan_done(disk_t *pdisk)
 {
 	unsigned hist_idx;
 	
+	progressbar_finish(bar);
+
 	printf("Access time histogram:\n");
 	for (hist_idx = 0; hist_idx < ARRAY_SIZE(pdisk->histogram); hist_idx++)
 	{

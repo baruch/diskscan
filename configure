@@ -24,17 +24,17 @@ arch_srcs = {
 lib_srcs.append(arch_srcs['src'])
 
 cli_srcs = [
-        'cli/cli.c', 'cli/verbose.c',
+        'cli/cli.c', 'cli/verbose.c', 'progressbar/lib/progressbar.c',
 ]
 
 executables = {
         'diskscan': cli_srcs,
 }
 
-cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-g', '-O3', '-Wall', '-Wextra', '-Wshadow',
+cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-Iprogressbar/include', '-g', '-O3', '-Wall', '-Wextra', '-Wshadow',
           '-Wmissing-prototypes', '-Winit-self', '-pipe', '-D_GNU_SOURCE',
           '-D_FORTIFY_SOURCE=2', '-DVERSION="%s"' % version]
-ldflags = []
+ldflags = ['-ltermcap']
 
 if options.dev:
     cflags.append('-Werror')
