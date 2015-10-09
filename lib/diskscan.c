@@ -133,6 +133,10 @@ static void disk_ata_monitor_start(disk_t *disk)
 				disk->state.ata.smart_table);
 		disk->state.ata.last_pending_reallocs = ata_smart_get_num_pending_reallocations(disk->state.ata.smart, disk->state.ata.smart_num,
 				disk->state.ata.smart_table);
+
+		// Now take a first look at the CRC error counters
+		disk->state.ata.last_crc_errors = ata_smart_get_num_crc_errors(disk->state.ata.smart, disk->state.ata.smart_num,
+				disk->state.ata.smart_table);
 	} else {
 		ERROR("Failed to read SMART attributes from device");
 	}
@@ -189,6 +193,18 @@ static void ata_test_reallocs(disk_t *disk, ata_smart_attr_t *smart, int smart_n
 	}
 }
 
+static void ata_test_crc_errors(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
+{
+	int crc_errors;
+
+	crc_errors = ata_smart_get_num_crc_errors(smart, smart_num, disk->state.ata.smart_table);
+	if (crc_errors != disk->state.ata.last_crc_errors) {
+		ERROR("CRC errors increased from %d to %d, your problem is not the disk but in a cable most likely!",
+				disk->state.ata.last_crc_errors, crc_errors);
+		disk->state.ata.last_crc_errors = crc_errors;
+	}
+}
+
 static void disk_ata_monitor(disk_t *disk)
 {
 	ata_smart_attr_t smart[MAX_SMART_ATTRS];
@@ -204,6 +220,7 @@ static void disk_ata_monitor(disk_t *disk)
 	if (smart_num > 0) {
 		ata_test_temp(disk, smart, smart_num);
 		ata_test_reallocs(disk, smart, smart_num);
+		ata_test_crc_errors(disk, smart, smart_num);
 	} else {
 		ERROR("Failed to read SMART attributes from device");
 	}

@@ -75,6 +75,7 @@ typedef struct ata_state_t {
 	int last_temp;
 	int last_reallocs;
 	int last_pending_reallocs;
+	int last_crc_errors;
 } ata_state_t;
 
 typedef struct scsi_state_t {
