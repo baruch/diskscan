@@ -1,0 +1,7 @@
+demo
+doc/
+*~
+*.o
+*.so
+*.a
+*.swp
