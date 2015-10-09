@@ -6,6 +6,7 @@ addons:
     packages:
       - python-yaml
       - ninja-build
+      - libtinfo-dev
 compiler:
   - gcc
     #- clang
