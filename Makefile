@@ -52,3 +52,6 @@ update-libscsicmd:
 
 update-progressbar:
 	git subtree pull --squash --prefix progressbar https://github.com/doches/progressbar master
+
+update-hdrhistogram:
+	git subtree pull --squash --prefix hdrhistogram https://github.com/HdrHistogram/HdrHistogram_c master
