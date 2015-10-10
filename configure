@@ -10,6 +10,8 @@ parser.add_option('-d', '--dev', dest='dev', help='Add developer options', actio
 
 lib_srcs = [
         'lib/data.c', 'lib/diskscan.c', 'lib/sha1.c', 'lib/system_id.c', 'lib/verbose.c', 'lib/disk.c',
+        'hdrhistogram/src/hdr_histogram.c', 'hdrhistogram/src/hdr_histogram_log.c',
+        'hdrhistogram/src/hdr_encoding.c',
 ]
 
 arch_freebsd = {'src': 'arch/arch-freebsd.c', 'h': 'arch/arch-posix.h'}
@@ -34,7 +36,7 @@ executables = {
 cflags = ['-I.', '-Iinclude', '-Ilibscsicmd/include', '-Iprogressbar/include', '-g', '-O3', '-Wall', '-Wextra', '-Wshadow',
           '-Wmissing-prototypes', '-Winit-self', '-pipe', '-D_GNU_SOURCE',
           '-D_FORTIFY_SOURCE=2', '-DVERSION="%s"' % version]
-ldflags = ['-ltermcap']
+ldflags = ['-ltermcap', '-lm', '-lz']
 
 if options.dev:
     cflags.append('-Werror')

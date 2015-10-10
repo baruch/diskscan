@@ -24,6 +24,7 @@
 #include "cli.h"
 
 #include "progressbar/include/progressbar.h"
+#include "hdrhistogram/src/hdr_histogram.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -149,22 +150,15 @@ static void print_latency(latency_t *latency_graph, unsigned latency_graph_len)
 
 void report_scan_done(disk_t *pdisk)
 {
-	unsigned hist_idx;
-	
 	progressbar_finish(bar);
 
-	printf("Access time histogram:\n");
-	for (hist_idx = 0; hist_idx < ARRAY_SIZE(pdisk->histogram); hist_idx++)
-	{
-		if (hist_idx != ARRAY_SIZE(pdisk->histogram)-1)
-			printf("%8" PRIu64 ": %" PRIu64 "\n", histogram_time[hist_idx].top_val, pdisk->histogram[hist_idx]);
-		else
-			printf("%8s: %" PRIu64 "\n", "above that", pdisk->histogram[hist_idx]);
-	}
+	printf("\nAccess time histogram:\n");
+	hdr_percentiles_print(pdisk->histogram, stdout, 5, 1000.0, CLASSIC); // Print msecs
 
+	printf("\nLatency graph:\n");
 	print_latency(pdisk->latency_graph, pdisk->latency_graph_len);
 
-	printf("Conclusion: %s\n", conclusion_to_str(pdisk->conclusion));
+	printf("\nConclusion: %s\n", conclusion_to_str(pdisk->conclusion));
 }
 
 static unsigned str_to_scan_size(const char *str)

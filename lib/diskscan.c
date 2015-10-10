@@ -83,7 +83,9 @@ static void spinner_done(void)
 const char *conclusion_to_str(enum conclusion conclusion)
 {
 	switch (conclusion) {
-		case CONCLUSION_FAILED: return "failed";
+		case CONCLUSION_FAILED_IO_ERRORS: return "failed due to IO errors";
+		case CONCLUSION_FAILED_MAX_LATENCY: return "failed due to a high max latency";
+		case CONCLUSION_FAILED_LATENCY_PERCENTILE: return "failed to to a high latency in the 99.99%'ile";
 		case CONCLUSION_PASSED: return "passed";
 		case CONCLUSION_SCAN_PROBLEM: return "scan_problem";
 		case CONCLUSION_ABORTED: return "scan_aborted";
@@ -319,6 +321,8 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 	strncpy(disk->path, path, sizeof(disk->path));
 	disk->path[sizeof(disk->path)-1] = 0;
 
+	hdr_init(1, 60*1000*1000, 3, &disk->histogram);
+
 	disk->latency_graph_len = latency_graph_len;
 	disk->latency_graph = calloc(latency_graph_len, sizeof(latency_t));
 	if (disk->latency_graph == NULL) {
@@ -493,12 +497,7 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		report_scan_success(disk, offset, data_size, t);
 	}
 
-	unsigned hist_idx = 0;
-	while (t_msec >= histogram_time[hist_idx].top_val && hist_idx < ARRAY_SIZE(disk->histogram) - 1) {
-		hist_idx++;
-	}
-	disk->histogram[hist_idx]++;
-
+	hdr_record_value(disk->histogram, t / 1000);
 	latency_bucket_add(disk, t_msec, state);
 
 	if (t_msec > 1000) {
@@ -634,26 +633,14 @@ static void set_realtime(bool realtime)
 
 static enum conclusion conclusion_calc(disk_t *disk)
 {
-	unsigned i;
-	uint64_t total;
-
 	if (disk->num_errors > 0)
-		return CONCLUSION_FAILED;
+		return CONCLUSION_FAILED_IO_ERRORS;
 
-	for (i = 0, total = 0; i < ARRAY_SIZE(histogram_time); i++) {
-		total += disk->histogram[i];
-	}
+	if (hdr_max(disk->histogram) > 10000000)
+		return CONCLUSION_FAILED_MAX_LATENCY;
 
-	const double total_d = (double)total;
-	for (i = 0; i < ARRAY_SIZE(histogram_time); i++) {
-		double percent = ((double)disk->histogram[i]) / total_d;
-		if (percent > histogram_time[i].percent_bad) {
-			const uint64_t low_end = i == 0 ? 0 : histogram_time[i-1].top_val;
-			const uint64_t high_end = histogram_time[i].top_val;
-			ERROR("Disk has %"PRIu64" (%f%%) IOs from %"PRIu64" to %"PRIu64" msecs, it is a bad disk!", disk->histogram[i], percent, low_end, high_end);
-			return CONCLUSION_FAILED;
-		}
-	}
+	if (hdr_value_at_percentile(disk->histogram, 99.99) > 8000000)
+		return CONCLUSION_FAILED_LATENCY_PERCENTILE;
 
 	VERBOSE("Disk has passed the test");
 	return CONCLUSION_PASSED;

@@ -23,6 +23,8 @@
 #include "compiler.h"
 #include "system_id.h"
 
+#include "hdrhistogram/src/hdr_histogram_log.h"
+
 #include <inttypes.h>
 #include <memory.h>
 #include <time.h>
@@ -224,24 +226,16 @@ void data_log_start(data_log_t *log, const char *filename, disk_t *disk)
 	add_indent(log->f, 2); fprintf(log->f, "\"Events\": [\n");
 }
 
-static void histogram_output(FILE *f, uint64_t *histogram, int histogram_len, int indent)
+static void histogram_output(FILE *f, struct hdr_histogram *histogram, int indent)
 {
-	//uint64_t histogram[ARRAY_SIZE(histogram_time)];
-	add_indent(f, indent); fprintf(f, "\"Histogram\": [\n");
+	char *encoded_histogram;
 
-	int i;
-	for (i = 0; i < histogram_len; i++) {
-		if (i != 0)
-			fprintf(f, ",\n");
-		add_indent(f, indent+1);
-		fprintf(f, "{");
-		fprintf(f, "\"LatencyMsec\": %24"PRIu64, histogram_time[i].top_val);
-		fprintf(f, ", \"Count\": %24"PRIu64, histogram[i]);
-		fprintf(f, "}");
-	}
-	fprintf(f, "\n");
+	hdr_log_encode(histogram, &encoded_histogram);
 
-	add_indent(f, indent); fprintf(f, "],\n");
+	add_indent(f, indent);
+	fprintf(f, "\"Histogram\": \"%s\"\n", encoded_histogram);
+
+	free(encoded_histogram);
 }
 
 static void latency_output(FILE *f, latency_t *latency, int latency_len, int indent)
@@ -280,7 +274,7 @@ void data_log_end(data_log_t *log, disk_t *disk)
 
 	add_indent(log->f, 2); time_output(log->f, "EndTime"); fprintf(log->f, ",\n");
 
-	histogram_output(log->f, disk->histogram, ARRAY_SIZE(disk->histogram), 2);
+	histogram_output(log->f, disk->histogram, 2);
 	latency_output(log->f, disk->latency_graph, disk->latency_graph_len, 2);
 	add_indent(log->f, 2); fprintf(log->f, "\"Conclusion\": \"%s\"\n", conclusion_to_str(disk->conclusion));
 

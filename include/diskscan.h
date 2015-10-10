@@ -6,35 +6,9 @@
 #include "arch.h"
 
 #include "libscsicmd/include/ata.h"
+#include "hdrhistogram/src/hdr_histogram.h"
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0]))
-
-struct histogram_def_t {
-	uint64_t top_val;
-	double percent_bad;
-};
-
-static const struct histogram_def_t histogram_time[] = {
-	{.top_val =    1, .percent_bad = 100.0},
-	{.top_val =   10, .percent_bad = 100.0},
-	{.top_val =  100, .percent_bad = 100.0},
-	{.top_val =  500, .percent_bad = 100.0},
-	{.top_val = 1000, .percent_bad = 10.0},
-	{.top_val = 2000, .percent_bad = 1.0},
-	{.top_val = 3000, .percent_bad = 1.0},
-	{.top_val = 4000, .percent_bad = 1.0},
-	{.top_val = 5000, .percent_bad = 1.0},
-    {.top_val = 6000, .percent_bad = 0.5},
-    {.top_val = 7000, .percent_bad = 0.5},
-    {.top_val = 8000, .percent_bad = 0.5},
-    {.top_val = 9000, .percent_bad = 0.5},
-    {.top_val = 10000, .percent_bad = 0.1},
-    {.top_val = 15000, .percent_bad = 0.01},
-    {.top_val = 20000, .percent_bad = 0.0},
-    {.top_val = 25000, .percent_bad = 0.0},
-    {.top_val = 30000, .percent_bad = 0.0},
-    {.top_val = UINT64_MAX, .percent_bad = 0.0}
-};
 
 enum scan_mode {
 	SCAN_MODE_UNKNOWN,
@@ -46,7 +20,10 @@ enum conclusion {
 	CONCLUSION_SCAN_PROBLEM, /* Problem in the scan, no real conclusion */
 	CONCLUSION_ABORTED, /* Scan aborted by used */
 	CONCLUSION_PASSED,  /* Disk looks fine */
-	CONCLUSION_FAILED,  /* Disk looks bad */
+	/* Disk looks bad, and the reason it failed the test */
+	CONCLUSION_FAILED_MAX_LATENCY,
+	CONCLUSION_FAILED_LATENCY_PERCENTILE,
+	CONCLUSION_FAILED_IO_ERRORS,
 };
 
 typedef struct latency_t {
@@ -101,7 +78,7 @@ typedef struct disk_t {
 	int fix;
 
 	uint64_t num_errors;
-	uint64_t histogram[ARRAY_SIZE(histogram_time)];
+	struct hdr_histogram *histogram;
 	unsigned latency_graph_len;
 	latency_t *latency_graph;
 	enum conclusion conclusion;
