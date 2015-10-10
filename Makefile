@@ -49,3 +49,6 @@ buildtest:
 
 update-libscsicmd:
 	git subtree pull --squash --prefix libscsicmd https://github.com/baruch/libscsicmd master
+
+update-progressbar:
+	git subtree pull --squash --prefix progressbar https://github.com/doches/progressbar master
