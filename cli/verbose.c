@@ -22,10 +22,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+int verbose_extra_newline;
+
 void verbose_out(const char *fmt, ...)
 {
 	va_list ap;
-	printf("\n");
+	if (verbose_extra_newline)
+		printf("\n");
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);

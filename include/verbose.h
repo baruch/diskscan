@@ -2,6 +2,7 @@
 #define _VERBOSE_H
 
 extern int verbose;
+extern int verbose_extra_newline;
 
 void verbose_out(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));;
 

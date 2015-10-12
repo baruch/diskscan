@@ -698,6 +698,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 		goto Exit;
 	}
 
+	verbose_extra_newline = 1;
 	for (offset = 0; disk->run && offset < disk_size_bytes; offset += latency_stride * disk->sector_size) {
 		VERBOSE("Scanning stride starting at %"PRIu64" done %"PRIu64"%%", offset, offset*100/disk_size_bytes);
 		progress_calc(disk, &state, 0);
@@ -711,6 +712,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 		else
 			disk_scsi_monitor(disk);
 	}
+	verbose_extra_newline = 0;
 
 	if (!disk->run) {
 		INFO("Disk scan interrupted");
