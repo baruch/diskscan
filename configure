@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-version = '0.16'
+version = '0.17'
 
 import platform
 from optparse import OptionParser
