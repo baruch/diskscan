@@ -21,9 +21,16 @@ Also, badblocks is essentially obsolete in this day and age since the disks them
 ## Build
 
 This project is using [ninja-build][1] you need to get ninja-build for your system, on Debian/Ubuntu it is as simple as:
-    apt-get install ninja-build
+    apt-get install ninja-build libtinfo-dev
+
+For RedHat/SuSe based distros you need to install ninja-build first and then:
+    yum install compat-libtermcap libtermcap-devel
 
 A Makefile is provided to avoid learning the ninja commands and do the non-build stuff (install, etc.)
+
+To do the build:
+
+    ./configure && ninja
 
 ## Install
 
