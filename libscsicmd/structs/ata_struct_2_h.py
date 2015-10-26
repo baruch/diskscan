@@ -54,7 +54,7 @@ def emit_suffix():
 	print('#endif')
 
 def convert_def(filename):
-	f = file(filename)
+	f = open(filename)
 	structs = yaml.load(f)
 	f.close()
 	emit_header(structs)
