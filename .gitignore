@@ -1,10 +1,5 @@
 *.o
 .*.d
-build.ninja
-lib.ninja
-tests.ninja
-.ninja_log
-.ninja_deps
 .gdb_history
 tags
 libscsicmd.a
@@ -20,3 +15,9 @@ scsi_read_capacity_10
 scsi_read_capacity_16
 scsi_inquiry
 scsi_log_sense
+test/libtestlib.a
+
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
