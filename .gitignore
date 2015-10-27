@@ -6,6 +6,8 @@ arch/arch.c
 include/arch-internal.h
 arch/arch.id
 *~
-.ninja_deps
-.ninja_log
-build.ninja
+CMakeCache.txt
+CMakeFiles
+cmake_install.cmake
+install_manifest.txt
+Makefile

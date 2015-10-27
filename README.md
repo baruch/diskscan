@@ -20,17 +20,17 @@ Also, badblocks is essentially obsolete in this day and age since the disks them
 
 ## Build
 
-This project is using [ninja-build][1] you need to get ninja-build for your system, on Debian/Ubuntu it is as simple as:
-    apt-get install ninja-build libtinfo-dev
+This project is using CMake, on Debian/Ubuntu it is as simple as:
+    apt-get install cmake make libtinfo-dev libncurses5-dev
 
 For RedHat/SuSe based distros you need to install ninja-build first and then:
-    yum install compat-libtermcap libtermcap-devel
+    yum install compat-libtermcap libtermcap-devel cmake
 
 A Makefile is provided to avoid learning the ninja commands and do the non-build stuff (install, etc.)
 
 To do the build:
 
-    ./configure && ninja
+    cmake . && make
 
 ## Install
 
@@ -40,7 +40,4 @@ You can control the DESTDIR when building packages and PREFIX if /usr is not rig
 
 ## License
 
-DiskScan is licensed under the GPL version 3 or later.
-
-
- [1]: https://martine.github.io/ninja/
+diskscan is licensed under the GPL version 3 or later.
