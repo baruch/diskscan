@@ -10,11 +10,10 @@ tries to be OS agnostic.
 Build
 =====
 
-The build system is using [redo](https://github.com/apenwarr/redo), a minimal
-`do` script is provided so that the full redo need not be installed.
+The build system is using [ninja-build](https://martine.github.io/ninja/), you need to get it before you can build.
 
 To build, run:
-  ./do
+  ./configure && ninja
 
 Author
 ======
