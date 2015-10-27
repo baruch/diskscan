@@ -76,10 +76,3 @@ void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsi
 	io_res->data = DATA_NONE;
 	io_res->error = ERROR_UNKNOWN;
 }
-
-void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
-{
-	memset(&io_res, 0, sizeof(*io_res));
-	io_res->data = DATA_NONE;
-	io_res->error = ERROR_UNKNOWN;
-}
