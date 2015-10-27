@@ -1,11 +1,15 @@
 language: c
-script: make V=1
-sudo: false
+
+before_install:
+  - sudo add-apt-repository ppa:kubuntu-ppa/backports -y
+  - sudo apt-get update -q
+  - sudo apt-get install cmake -y
+script: cmake --version && cmake . && make VERBOSE=1
+sudo: true
 addons:
   apt:
     packages:
       - python-yaml
-      - ninja-build
       - libtinfo-dev
 compiler:
   - gcc
