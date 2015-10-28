@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <time.h>
+#include <sys/endian.h>
 
 #include "hdr_encoding.h"
 #include "hdr_histogram.h"
