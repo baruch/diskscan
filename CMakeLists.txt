@@ -13,6 +13,8 @@ if (NOT HAVE_CLOCK_GETTIME)
    set(CMAKE_EXTRA_INCLUDE_FILES time.h)
    CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
    SET(CMAKE_EXTRA_INCLUDE_FILES)
+else()
+        list(APPEND LIBS rt)
 endif()
 
 # Find tinfo for termcap functions
@@ -54,7 +56,7 @@ add_dependencies(diskscanlib scsicmd)
 
 # Build diskscan cli command
 add_executable(diskscan diskscan.c cli/cli.c cli/verbose.c progressbar/lib/progressbar.c)
-target_link_libraries(diskscan diskscanlib scsicmd m ${tinfo_LIBRARY} ${ZLIB_LIBRARIES})
+target_link_libraries(diskscan diskscanlib scsicmd m ${tinfo_LIBRARY} ${ZLIB_LIBRARIES} ${LIBS})
 
 install(TARGETS diskscan
         RUNTIME DESTINATION bin)
