@@ -14,7 +14,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <time.h>
-#include <sys/endian.h>
 
 #include "hdr_encoding.h"
 #include "hdr_histogram.h"
@@ -39,6 +38,10 @@
 #define htole64(x) OSSwapHostToLittleInt64(x)
 #define be64toh(x) OSSwapBigToHostInt64(x)
 #define le64toh(x) OSSwapLittleToHostInt64(x)
+
+#elif defined(FREEBSD)
+
+#include <sys/endian.h>
 
 #endif
 
