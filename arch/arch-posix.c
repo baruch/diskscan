@@ -4,9 +4,15 @@
 #include <unistd.h>
 #include <memory.h>
 
+#include "verbose.h"
+
 bool disk_dev_open(disk_dev_t *dev, const char *path)
 {
 	dev->fd = open(path, O_RDWR|O_DIRECT);
+	if (dev->fd < 0) {
+		INFO("Failed to open device %s with write permission, retrying without", path);
+		dev->fd = open(path, O_RDONLY|O_DIRECT);
+	}
 	return dev->fd >= 0;
 }
 
