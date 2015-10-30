@@ -72,7 +72,17 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 
 void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
 {
+	(void)sense_size;
+	(void)sense;
+	(void)buf_size;
+	(void)buf;
+	(void)cdb_len;
+	(void)cdb;
+	(void)dev;
+
+	*sense_read = 0;
+	*buf_read = 0;
 	memset(&io_res, 0, sizeof(*io_res));
 	io_res->data = DATA_NONE;
-	io_res->error = ERROR_UNKNOWN;
+	io_res->error = ERROR_NONE;
 }

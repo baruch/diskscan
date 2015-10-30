@@ -39,7 +39,7 @@
 #define be64toh(x) OSSwapBigToHostInt64(x)
 #define le64toh(x) OSSwapLittleToHostInt64(x)
 
-#elif defined(FREEBSD)
+#elif defined(__FreeBSD__)
 
 #include <sys/endian.h>
 
