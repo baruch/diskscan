@@ -276,23 +276,23 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 
 	INFO("Validating path %s", path);
 	if (access(path, F_OK)) {
-		ERROR("Disk path %s does not exist: %m", path);
+		ERROR("Disk path %s does not exist, errno=%d: %s", path, errno, strerror(errno));
 		return 1;
 	}
 
 	const int access_mode_flag = fix ? R_OK|W_OK : R_OK;
 	if (access(path, access_mode_flag)) {
-		ERROR("Disk path %s is inaccessible: %m", path);
+		ERROR("Disk path %s is inaccessible, errno=%d: %s", path, errno, strerror(errno));
 		return 1;
 	}
 
 	if (!disk_dev_open(&disk->dev, path)) {
-		ERROR("Failed to open path %s: %m", path);
+		ERROR("Failed to open path %s, errno=%d: %s", path, errno, strerror(errno));
 		return 1;
 	}
 
 	if (disk_dev_read_cap(&disk->dev, &disk->num_bytes, &disk->sector_size) < 0) {
-		ERROR("Can't get block device size information for path %s: %m", path);
+		ERROR("Can't get block device size information for path %s, errno=%d: %s", path, errno, strerror(errno));
 		goto Error;
 	}
 
@@ -314,7 +314,7 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 #endif
 
 	if (disk_dev_identify(&disk->dev, disk->vendor, disk->model, disk->fw_rev, disk->serial, &disk->is_ata, disk->ata_buf, &disk->ata_buf_len) < 0) {
-		ERROR("Can't identify disk for path %s: %m", path);
+		ERROR("Can't identify disk for path %s, errno=%d: %s", path, errno, strerror(errno));
 		goto Error;
 	}
 
@@ -469,7 +469,7 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	// Handle error or incomplete data
 	if (io_res.data != DATA_FULL || io_res.error != ERROR_NONE) {
 		int s_errno = errno;
-		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd: %m", offset, data_size, ret);
+		ERROR("Error when reading at offset %" PRIu64 " size %d read %zd, errno=%d: %s", offset, data_size, ret, errno, strerror(errno));
 		ERROR("Details: error=%s data=%s %02X/%02X/%02X", error_to_str(io_res.error), data_to_str(io_res.data),
 				io_res.info.sense_key, io_res.info.asc, io_res.info.ascq);
 		report_scan_error(disk, offset, data_size, t);
@@ -508,7 +508,7 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
 		ret = disk_dev_write(&disk->dev, offset, data_size, data, &io_res);
 		if (ret != data_size) {
-			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %m", ret, errno);
+			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %s", ret, errno, strerror(errno));
 		}
 	}
 
@@ -675,7 +675,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	VVVERBOSE("Using buffer of size %d", data_size);
 
 	if (data == NULL) {
-		ERROR("Failed to allocate data buffer: %m");
+		ERROR("Failed to allocate data buffer, errno=%d: %s", errno, strerror(errno));
 		result = 1;
 		goto Exit;
 	}

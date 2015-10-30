@@ -178,7 +178,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 
 	ret = ioctl(fd, SG_IO, &hdr);
 	if (ret < 0) {
-		ERROR("Failed to issue ioctl to device errno=%d: %m", errno);
+		ERROR("Failed to issue ioctl to device errno=%d: %s", errno, strerror(errno));
 		io_res->error = ERROR_FATAL;
 		io_res->data = DATA_NONE;
 		return -1;

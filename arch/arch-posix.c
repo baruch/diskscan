@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <memory.h>
+#include <errno.h>
 
 #include "verbose.h"
 
@@ -39,6 +40,8 @@ ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes
 		return ret;
 	} else {
 		// ret < 0, i.e. error
+		INFO("Error reading from disk, offset=%lu len=%u errno=%d (%s)",
+			offset_bytes, len_bytes, errno, strerror(errno));
 		io_res->data = DATA_NONE;
 		io_res->error = ERROR_UNCORRECTED;
 		io_res->sense_len = 0;
