@@ -505,10 +505,31 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 	}
 
 	if (disk->fix && (t_msec > 3000 || error)) {
-		INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
-		ret = disk_dev_write(&disk->dev, offset, data_size, data, &io_res);
-		if (ret != data_size) {
-			ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %s", ret, errno, strerror(errno));
+		if (io_res.error != ERROR_UNCORRECTED) {
+			INFO("Fixing region by rewriting, offset=%"PRIu64" size=%d", offset, data_size);
+			ret = disk_dev_write(&disk->dev, offset, data_size, data, &io_res);
+			if (ret != data_size) {
+				ERROR("Error while attempting to rewrite the data! ret=%zd errno=%d: %s", ret, errno, strerror(errno));
+			}
+		} else {
+			// When we correct uncorrectable errors we want to zero it out, this should reduce any confusion later on when the data is read
+			unsigned fix_offset = 0;
+			int fix_size = 4096;
+
+			if (data_size < fix_size)
+				fix_size = data_size;
+
+			for (; data_size >= (int)(fix_offset + fix_size); fix_offset += fix_size) {
+				disk_dev_read(&disk->dev, offset+fix_offset, fix_size, data, &io_res);
+				if (io_res.error == ERROR_UNCORRECTED) {
+					INFO("Fixing uncorrectable region by writing zeros, offset=%"PRIu64" size=%d", offset+fix_offset, fix_size);
+					memset(data, 0, fix_size);
+					ret = disk_dev_write(&disk->dev, offset+fix_offset, fix_size, data, &io_res);
+					if (ret != data_size) {
+						ERROR("Error while attempting to overwrite uncorrectable data! ret=%zd errno=%d: %s", ret, errno, strerror(errno));
+					}
+				}
+			}
 		}
 	}
 
