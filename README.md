@@ -21,10 +21,10 @@ Also, badblocks is essentially obsolete in this day and age since the disks them
 ## Build
 
 This project is using CMake, on Debian/Ubuntu it is as simple as:
-    apt-get install cmake make libtinfo-dev libncurses5-dev
+    apt-get install cmake make libtinfo-dev libncurses5-dev zlib1g-dev python-yaml
 
 For RedHat/SuSe based distros you need to install ninja-build first and then:
-    yum install compat-libtermcap libtermcap-devel cmake
+    yum install compat-libtermcap libtermcap-devel cmake python-yaml zlib-devel
 
 A Makefile is provided to avoid learning the ninja commands and do the non-build stuff (install, etc.)
 
