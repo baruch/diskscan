@@ -1,15 +1,23 @@
 language: c
 
-script: cmake --version && cmake . && make VERBOSE=1
-sudo: false
+install:
+  - wget https://s3.amazonaws.com/biibinaries/thirdparty/cmake-3.0.2-Linux-64.tar.gz
+  - tar -xzf cmake-3.0.2-Linux-64.tar.gz
+  - sudo cp -fR cmake-3.0.2-Linux-64/* /usr
+  - rm -rf cmake-3.0.2-Linux-64
+  - rm cmake-3.0.2-Linux-64.tar.gz
+script:
+  - cmake --version
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make VERBOSE=1
+sudo: true
 addons:
   apt:
-    sources:
-      - ppa:smspillaz/cmake-3.0.2
     packages:
       - python-yaml
       - libtinfo-dev
-      - cmake
 compiler:
   - gcc
     #- clang
