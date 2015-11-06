@@ -3,8 +3,6 @@
 .gdb_history
 tags
 libscsicmd.a
-include/ata_parse.h
-smartdb_gen.c
 ata_identify
 test/ata_identify_dump.[ch]
 ata_smart_return_status

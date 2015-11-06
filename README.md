@@ -10,10 +10,10 @@ tries to be OS agnostic.
 Build
 =====
 
-The build system is using [ninja-build](https://martine.github.io/ninja/), you need to get it before you can build.
+The build system is using cmake, you need to get it before you can build.
 
 To build, run:
-  ./configure && ninja
+  cmake . && make
 
 Author
 ======
