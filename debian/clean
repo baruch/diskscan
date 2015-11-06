@@ -1,0 +1,8 @@
+diskscan
+Documentation/diskscan.1
+include/arch-internal.h
+libdiskscan.a
+libscsicmd.a
+libscsicmd/include/ata_parse.h
+libscsicmd/src/smartdb/smartdb_gen.c
+tags

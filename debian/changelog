@@ -1,0 +1,127 @@
+diskscan (0.17.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Wed, 04 Nov 2015 18:09:15 -0200
+
+diskscan (0.17-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #803794)
+  * debian/clean: removed previous names and added new entries to remove
+      some files forgotten by upstream when cleaning the source code.
+  * debian/control: added libncurses5-dev and zlib1g-dev to Build-Depends
+      field.
+  * debian/copyright: updated some information about the upstream.
+  * debian/patches: removed. The upstream fixed the source code. Thanks.
+  * debian/rules:
+      - Added the target override_dh_auto_clean to remove the directory
+        'built', forgotten by upstream.
+      - Added the target override_dh_auto_configure to run a single
+        'configure' command.
+  * debian/source/options: removed. The upstream fixed the source code.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Mon, 02 Nov 2015 18:37:45 -0200
+
+diskscan (0.16-1) unstable; urgency=medium
+
+  * New upstream release.
+  * The upstream is using a new method to build the final files. Consequently:
+      - Dropped the dh-autoreconf.
+      - debian/clean: updated to use a new content.
+      - debian/control: added ctags and ninja-build to Build-Depends field.
+      - debian/dirs: added to create some necessary directories.
+      - debian/patches/:
+          ~ Removed the useless Makefile patch.
+          ~ Added the fix-manpage-path patch to fix the manpage install place.
+          ~ Added the fix-make-clean patch to avoid a FTBFS in first build.
+      - debian/rules:
+          ~ Full updated and adapted.
+          ~ Added V=1 variable to force to show the commands when compiling.
+          ~ Using DEB_BUILD_MAINT_OPTIONS variable, instead of
+            DEB_CFLAGS_MAINT_APPEND and DEB_LDFLAGS_MAINT_APPEND to improve the
+            GCC hardening.
+      - debian/source/options: added to ignore changes in specific files.
+  * debian/copyright: full updated.
+  * debian/docs: added to install the upstream README.md file.
+  * debian/gbp.conf: not used by me... Removed.
+  * Leaving of provide a picked upstream changelog. Consequently:
+     - Removed the debian/README.source file.
+     - Removed the debian/upstream.changelog file.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Sun, 04 Oct 2015 01:25:36 -0300
+
+diskscan (0.15-1) unstable; urgency=medium
+
+  * New upstream release. (Closes: #782733)
+  * Using autoreconf now.
+  * debian/clean: updated.
+  * debian/copyright:
+      - Added new copyright notices.
+      - Removed the dot-zero from GPL licenses.
+      - Updated the upstream and packaging copyright years.
+  * debian/upstream.changelog: updated.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Wed, 20 May 2015 20:10:06 -0300
+
+diskscan (0.14.1-6) unstable; urgency=medium
+
+  * Bumped Standards-Version to 3.9.6.
+  * debian/copyright: removed the space in 'public domain'
+      license name.
+  * debian/rules: added the DEB_CFLAGS_MAINT_APPEND and
+      DEB_LDFLAGS_MAINT_APPEND variables to fix some
+      issues pointed by blhc.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Sun, 26 Oct 2014 19:01:33 -0200
+
+diskscan (0.14.1-5) unstable; urgency=medium
+
+  * New maintainer email address.
+  * debian/control: updated the Vcs-Browser field.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Sun, 03 Aug 2014 12:33:50 -0300
+
+diskscan (0.14.1-4) unstable; urgency=medium
+
+  * debian/control: new improvement to the short and long description. Thanks
+    again to Filipus Klutiero <chealer@gmail.com>. (Closes: #749681)
+
+ -- Joao Eriberto Mota Filho <eriberto@eriberto.pro.br>  Sun, 01 Jun 2014 01:15:45 -0300
+
+diskscan (0.14.1-3) unstable; urgency=medium
+
+  * debian/control: improved the long description.  Thanks to
+    Filipus Klutiero <chealer@gmail.com>. (Closes: #749197)
+
+ -- Joao Eriberto Mota Filho <eriberto@eriberto.pro.br>  Sun, 25 May 2014 12:02:34 -0300
+
+diskscan (0.14.1-2) unstable; urgency=medium
+
+  * Added the Makefile patch that forces the verbose mode to
+    show flags when compiling.
+
+ -- Joao Eriberto Mota Filho <eriberto@eriberto.pro.br>  Fri, 23 May 2014 07:50:32 -0300
+
+diskscan (0.14.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/clean: added to remove some forgotten files.
+  * debian/control:
+      - Added autotools-dev, automake, python-yaml as build dependency.
+      - Updated Standards-Version from 3.9.4 to 3.9.5.
+  * debian/copyright: updated the upstream and packaging copyright years.
+  * debian/rules:
+      - Added the autotools-dev option to main target.
+      - Added the override_dh_auto_configure target to execute the
+        autogen.sh upstream script.
+      - Removed unneeded lines to provide GCC hardening.
+  * debian/upstream.changelog: updated.
+  * debian/watch: fixed the download and improved the regexp.
+
+ -- Joao Eriberto Mota Filho <eriberto@eriberto.pro.br>  Tue, 20 May 2014 21:35:00 -0300
+
+diskscan (0.13-1) unstable; urgency=low
+
+  * Initial release (Closes: #724458)
+
+ -- Joao Eriberto Mota Filho <eriberto@eriberto.pro.br>  Mon, 07 Oct 2013 06:47:01 -0300

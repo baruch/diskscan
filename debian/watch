@@ -1,0 +1,2 @@
+version=3
+https://github.com/baruch/diskscan/releases .*/(?:diskscan-)?(\d\S+)\.tar\.(?:bz2|gz|xz)

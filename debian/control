@@ -1,0 +1,37 @@
+Source: diskscan
+Section: utils
+Priority: optional
+Maintainer: Joao Eriberto Mota Filho <eriberto@debian.org>
+Build-Depends: debhelper (>= 9),
+               libncurses5-dev,
+               cmake,
+               python-yaml,
+               zlib1g-dev
+Standards-Version: 3.9.6
+Homepage: https://github.com/baruch/diskscan
+Vcs-Git: git://anonscm.debian.org/collab-maint/diskscan.git
+Vcs-Browser: http://anonscm.debian.org/cgit/collab-maint/diskscan.git
+
+Package: diskscan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Enhances: f3
+Description: scan storage media for bad or near failure sectors
+ diskscan is intended to find sectors of a storage medium
+ (hard disk, flash drive or pendrive, etc.) which are bad
+ or in the process of going bad.
+ .
+ The operation is entirely read-only and does not cause
+ damage to the data on filesystems. As the program reads
+ block device sectors, it will work whether there is a
+ filesystem or not.
+ .
+ diskscan reads the entire block device and notes the time
+ it took to read a block. When there is an error it is
+ immediately noted and also when there is a higher latency
+ to read a block. A histogram of the block latency times is
+ also given to assess the health of the medium.
+ .
+ diskscan can also be used to test the speed and quality of
+ the medium. All sectors of a perfect medium could be read
+ at the same speed.
