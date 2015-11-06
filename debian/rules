@@ -1,9 +1,5 @@
 #!/usr/bin/make -f
-export DH_VERBOSE=1
+export DH_VERBOSE=3
 
 %:
 	dh $@ --buildsystem=cmake --sourcedirectory=. --builddirectory=.
-
-override_dh_auto_configure:
-override_dh_auto_build:
-override_dh_auto_install:
