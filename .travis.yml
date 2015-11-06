@@ -1,16 +1,15 @@
 language: c
 
-before_install:
-  - sudo add-apt-repository ppa:kubuntu-ppa/backports -y
-  - sudo apt-get update -q
-  - sudo apt-get install cmake -y
 script: cmake --version && cmake . && make VERBOSE=1
-sudo: true
+sudo: false
 addons:
   apt:
+    repository:
+      - ppa:smspillaz/cmake-3.0.2
     packages:
       - python-yaml
       - libtinfo-dev
+      - cmake
 compiler:
   - gcc
     #- clang
