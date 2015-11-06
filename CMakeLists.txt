@@ -35,8 +35,8 @@ else()
         set(ARCH_INCLUDE "arch/arch-posix.h")
 endif()
 
-add_custom_command(OUTPUT include/arch-internal.h
-                  COMMAND ln -s ../${ARCH_INCLUDE} include/arch-internal.h
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/include/arch-internal.h
+        COMMAND ln -fs ${CMAKE_CURRENT_SOURCE_DIR}/${ARCH_INCLUDE} ${CMAKE_CURRENT_SOURCE_DIR}/include/arch-internal.h
                   )
 
 # Build diskscan
@@ -54,7 +54,7 @@ add_subdirectory(libscsicmd/src)
 # Build diskscan library
 add_library(diskscanlib STATIC lib/data.c lib/diskscan.c lib/sha1.c lib/system_id.c lib/verbose.c lib/disk.c
         hdrhistogram/src/hdr_histogram.c hdrhistogram/src/hdr_histogram_log.c
-        hdrhistogram/src/hdr_encoding.c ${ARCH_SRC} include/arch-internal.h)
+        hdrhistogram/src/hdr_encoding.c ${ARCH_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/include/arch-internal.h)
 add_dependencies(diskscanlib scsicmd)
 
 # Build diskscan cli command
