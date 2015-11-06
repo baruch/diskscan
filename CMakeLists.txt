@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 2.8.12)
-project(diskscan)
+cmake_minimum_required(VERSION 3.0.2)
+project(diskscan
+        VERSION 0.18)
 
 export(PACKAGE diskscan)
+
+set(PACKAGE_VERSION ${PROJECT_VERSION})
 
 # Pull in zlib
 find_package(ZLIB REQUIRED)
@@ -40,7 +43,7 @@ add_custom_command(OUTPUT include/arch-internal.h
 include_directories("include")
 add_compile_options(-Wall -Wextra -Wshadow -Wmissing-prototypes -Winit-self)
 add_definitions(-D_GNU_SOURCE -D_FORTIFY_SOURCE=2)
-add_definitions(-DVERSION="0.18")
+add_definitions(-DVERSION="${PROJECT_VERSION}")
 include_directories(.)
 include_directories(progressbar/include)
 
@@ -61,7 +64,6 @@ target_link_libraries(diskscan diskscanlib scsicmd m ${tinfo_LIBRARY} ${ZLIB_LIB
 install(TARGETS diskscan
         RUNTIME DESTINATION bin)
 
-add_custom_command(OUTPUT Documentation/diskscan.1
-        COMMAND sed -e 's/@PACKAGE_VERSION@/${PACKAGE_VERSION}/' Documentation/diskscan.1.in > Documentation/diskscan.1)
+configure_file(Documentation/diskscan.1.in Documentation/diskscan.1)
 install(FILES Documentation/diskscan.1
         DESTINATION man/man1 COMPONENT doc)
