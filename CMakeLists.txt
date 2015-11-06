@@ -66,4 +66,4 @@ install(TARGETS diskscan
 
 configure_file(Documentation/diskscan.1.in Documentation/diskscan.1)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Documentation/diskscan.1
-        DESTINATION man/man1 COMPONENT doc)
+        DESTINATION share/man/man1 COMPONENT doc)
