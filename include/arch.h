@@ -29,6 +29,14 @@ typedef struct {
 	unsigned sense_len;
 } io_result_t;
 
+typedef enum {
+	DISK_NOT_MOUNTED = 0,
+	DISK_MOUNTED_RO = 1,
+	DISK_MOUNTED_RW = 2,
+} disk_mount_e;
+
+disk_mount_e disk_dev_mount_state(const char *path);
+
 bool disk_dev_open(disk_dev_t *dev, const char *path);
 void disk_dev_close(disk_dev_t *dev);
 void disk_dev_cdb_out(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read,
