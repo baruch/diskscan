@@ -6,6 +6,11 @@ export(PACKAGE diskscan)
 
 set(PACKAGE_VERSION ${PROJECT_VERSION})
 
+# Default to a debug build
+if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Debug)
+endif(NOT CMAKE_BUILD_TYPE)
+
 # Pull in zlib
 find_package(ZLIB REQUIRED)
 
