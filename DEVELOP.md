@@ -1,5 +1,11 @@
 # Developing
 
+## Debug build
+
+To create a debug build you can tell cmake:
+
+    cmake -DCMAKE_BUILD_TYPE=DEBUG .
+
 ## Updating Libraries
 
 Update libscsicmd:
