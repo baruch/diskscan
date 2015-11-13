@@ -3,6 +3,9 @@
 #include <sys/disk.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/param.h>
+#include <sys/ucred.h>
+#include <sys/mount.h>
 
 #include "arch-posix.c"
 #include <net/if.h>
@@ -33,6 +36,37 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 	return 0;
 }
 
+disk_mount_e disk_dev_mount_state(const char *path)
+{
+	int num_mounts;
+	struct statfs *mntbuf;
+	disk_mount_e last_state;
+	int i;
+
+	num_mounts = getmntinfo(&mntbuf, MNT_WAIT);
+	if (num_mounts == 0) {
+		ERROR("Failed to get the mount information, errno=%d", errno);
+		return DISK_MOUNTED_RW;
+	}
+
+	last_state = DISK_NOT_MOUNTED;
+	for (i = 0; i < num_mounts; i++) {
+		struct statfs *mnt = &mntbuf[i];
+
+		if (strncmp(path, mnt->f_mntfromname, strlen(path)) == 0) {
+			disk_mount_e cur_state = DISK_NOT_MOUNTED;
+			if (mnt->f_flags == MNT_RDONLY)
+				cur_state = DISK_MOUNTED_RO;
+			else
+				cur_state = DISK_MOUNTED_RW;
+
+			if (cur_state > last_state)
+				last_state = cur_state;
+		}
+	}
+
+	return last_state;
+}
 void mac_read(unsigned char *buf, int len)
 {
 	struct ifreq ifr;
