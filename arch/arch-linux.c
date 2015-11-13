@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <net/if.h>
 #include <netinet/in.h>
+#include <mntent.h>
 
 static void strtrim(char *s)
 {
@@ -235,6 +236,79 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 
 	io_res->error = ERROR_NONE;
 	return 0;
+}
+
+static disk_mount_e mount_point_check(struct mntent *mnt)
+{
+	char *next = mnt->mnt_opts;
+	char *opt;
+
+	/* Device is mounted, check it */
+	while ((opt = strtok(next, ", \t\r\n")) != NULL) {
+		next = NULL; // continue scanning for this string
+		if (strcmp(opt, "rw") == 0)
+			return DISK_MOUNTED_RW;
+	}
+
+	return DISK_MOUNTED_RO;
+}
+
+disk_mount_e disk_dev_mount_state(const char *path)
+{
+	struct stat dev_st_buf;
+	struct stat st_buf;
+	FILE *f = NULL;
+	struct mntent *mnt;
+	disk_mount_e state = DISK_MOUNTED_RW; // assume the worst
+
+	f = setmntent("/proc/mounts", "r");
+	if (f == NULL) {
+		ERROR("Failed to open /proc/mounts to know the state, errno=%d", errno);
+		goto Exit;
+	}
+
+	if (stat(path, &dev_st_buf) != 0) {
+		ERROR("Failed to stat the path %s, errno=%d", path, errno);
+		goto Exit;
+	}
+
+	if (!S_ISBLK(dev_st_buf.st_mode)) {
+		ERROR("Device %s is not a block device", path);
+		goto Exit; // We only want block devices
+	}
+
+	// From here we assume the disk is not mounted
+	state = DISK_NOT_MOUNTED;
+
+	while ((mnt = getmntent(f)) != NULL) {
+		disk_mount_e cur_state = DISK_NOT_MOUNTED;
+
+		/* Ignore non-full-path entries */
+		if (mnt->mnt_fsname[0] != '/')
+			continue;
+		/* Check for a name prefix match, we may check a full block device and a partition is mounted */
+		if (strncmp(path, mnt->mnt_fsname, strlen(path)) == 0) {
+			cur_state = mount_point_check(mnt);
+			if (cur_state > state)
+				state = cur_state;
+			continue;
+		}
+		/* Check for an underlying device match (name may have changed in between actions) */
+		if (stat(mnt->mnt_fsname, &st_buf) == 0) {
+			if (!S_ISBLK(st_buf.st_mode))
+				continue;
+			if (dev_st_buf.st_rdev == st_buf.st_rdev) {
+				cur_state = mount_point_check(mnt);
+				if (cur_state > state)
+					state = cur_state;
+			}
+		}
+	}
+
+Exit:
+	if (f)
+		endmntent(f);
+	return state;
 }
 
 bool disk_dev_open(disk_dev_t *dev, const char *path)

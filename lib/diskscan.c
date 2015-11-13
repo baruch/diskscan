@@ -269,7 +269,33 @@ static void disk_scsi_monitor_end(disk_t *disk)
 	(void)disk;
 }
 
-int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len)
+static const char *disk_mount_str(disk_mount_e mount)
+{
+	switch (mount) {
+		case DISK_NOT_MOUNTED: return "not mounted";
+		case DISK_MOUNTED_RO: return "mounted read-only";
+		case DISK_MOUNTED_RW: return "mounted read-write";
+		default: return "unknown";
+	}
+}
+
+static int disk_mount_allowed(const char *path, disk_mount_e allowed_mount)
+{
+	const disk_mount_e mount_state = disk_dev_mount_state(path);
+
+	if (mount_state > allowed_mount) {
+		ERROR("Disk is currently %s and we only allow %s, use --force-mounted or --force-mounted-rw if the risk of problems is acceptable", disk_mount_str(mount_state), disk_mount_str(allowed_mount));
+		return 0;
+	}
+
+	if (mount_state != DISK_NOT_MOUNTED) {
+		INFO("Disk is %s but this is allowed with a force option", disk_mount_str(mount_state));
+	}
+
+	return 1;
+}
+
+int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_len, disk_mount_e allowed_mount)
 {
 	memset(disk, 0, sizeof(*disk));
 	disk->fix = fix;
@@ -283,6 +309,11 @@ int disk_open(disk_t *disk, const char *path, int fix, unsigned latency_graph_le
 	const int access_mode_flag = fix ? R_OK|W_OK : R_OK;
 	if (access(path, access_mode_flag)) {
 		ERROR("Disk path %s is inaccessible, errno=%d: %s", path, errno, strerror(errno));
+		return 1;
+	}
+
+	if (fix && !disk_mount_allowed(path, allowed_mount)) {
+		ERROR("Better not fix with the disk mounted, mounted fs may get confused when data is possibly modified under its feet");
 		return 1;
 	}
 

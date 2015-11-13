@@ -47,6 +47,7 @@ struct options_t {
 	unsigned scan_size;
 	char *data_log_name;
 	char *data_log_raw_name;
+	disk_mount_e allowed_mount;
 };
 
 static void print_header(void)
@@ -67,6 +68,8 @@ static int usage(void) {
 	printf("    -e, --size <size>    - Scan size (default to 64K, must be multiple of 512)\n");
 	printf("    -o, --output <file>  - Output file (json)\n");
 	printf("    -r, --raw-log <file> - Raw log of all scan results (json)\n");
+	printf("    --force-mounted      - Allow checking a read-only mounted disk\n");
+	printf("    --force-mounted-rw   - Allow checking a read-write mounted disk\n");
 	printf("\n");
 	return 1;
 }
@@ -203,6 +206,7 @@ static int parse_args(int argc, char **argv, options_t *opts)
 {
 	int c;
 	int unknown = 0;
+	static int allowed_mount = DISK_NOT_MOUNTED;
 
 	opts->scan_size = 64*1024;
 
@@ -215,6 +219,8 @@ static int parse_args(int argc, char **argv, options_t *opts)
 			{"size",    required_argument, 0,  'e'},
 			{"raw-log", required_argument, 0,  'r'},
 			{"output",  required_argument, 0,  'o'},
+			{"force-mounted", no_argument, &allowed_mount, DISK_MOUNTED_RO},
+			{"force-mounted-rw", no_argument, &allowed_mount, DISK_MOUNTED_RW},
 			{0,         0,                 0,  0}
 		};
 
@@ -276,6 +282,7 @@ static int parse_args(int argc, char **argv, options_t *opts)
 	}
 
 	opts->disk_path = argv[optind];
+	opts->allowed_mount = allowed_mount;
 	return 0;
 }
 
@@ -306,8 +313,10 @@ int diskscan_cli(int argc, char **argv)
 {
 	int ret;
 	options_t opts;
+
 	memset(&opts, 0, sizeof(opts));
 	opts.mode = SCAN_MODE_SEQ;
+	opts.allowed_mount = DISK_NOT_MOUNTED;
 
 	if (parse_args(argc, argv, &opts))
 		return 1;
@@ -317,7 +326,7 @@ int diskscan_cli(int argc, char **argv)
 
 	setup_signals();
 
-	if (disk_open(&disk, opts.disk_path, opts.fix, 70))
+	if (disk_open(&disk, opts.disk_path, opts.fix, 70, opts.allowed_mount))
 		return 1;
 
 	/*
