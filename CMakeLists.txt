@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(diskscan
-        VERSION 0.18)
+        VERSION 0.19)
 
 export(PACKAGE diskscan)
 
