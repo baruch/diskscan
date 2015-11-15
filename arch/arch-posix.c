@@ -4,8 +4,10 @@
 #include <unistd.h>
 #include <memory.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #include "verbose.h"
+#include "arch.h"
 
 bool disk_dev_open(disk_dev_t *dev, const char *path)
 {

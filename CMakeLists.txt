@@ -31,7 +31,7 @@ elseif (${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
         set(ARCH_SRC "arch/arch-freebsd.c")
         set(ARCH_INCLUDE "arch/arch-posix.h")
 else()
-        set(ARCH_SRC "arch/arch-posix.c")
+        set(ARCH_SRC "arch/arch-generic.c")
         set(ARCH_INCLUDE "arch/arch-posix.h")
 endif()
 
