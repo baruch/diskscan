@@ -24,9 +24,13 @@ endif()
 find_library(tinfo_LIBRARY NAMES tinfo curses)
 
 # Architecture files
+message("SYSTEM NAME: ${CMAKE_SYSTEM_NAME}")
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         set(ARCH_SRC "arch/arch-linux.c")
         set(ARCH_INCLUDE "arch/arch-linux.h")
+elseif (${CMAKE_SYSTEM_NAME} STREQUAL "kFreeBSD")
+        set(ARCH_SRC "arch/arch-freebsd.c")
+        set(ARCH_INCLUDE "arch/arch-posix.h")
 elseif (${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
         set(ARCH_SRC "arch/arch-freebsd.c")
         set(ARCH_INCLUDE "arch/arch-posix.h")
