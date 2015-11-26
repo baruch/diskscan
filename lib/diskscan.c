@@ -510,7 +510,7 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 			ERROR("Fatal error occurred, bailing out.");
 			return false;
 		}
-		if (io_res.error == ERROR_UNKNOWN) {
+		if (io_res.error == ERROR_UNKNOWN || (s_errno != EIO && s_errno != 0)) {
 			if (state->num_unknown_errors++ > 500) {
 				ERROR("%u unknown errors occurred, assuming fatal issue.", state->num_unknown_errors);
 				return false;
@@ -518,10 +518,6 @@ static bool disk_scan_part(disk_t *disk, uint64_t offset, void *data, int data_s
 			ERROR("Unknown error occurred, possibly untranslated error by storage layers, trying to continue.");
 
 		}
-
-		if (s_errno != EIO && s_errno != 0)
-			abort();
-		// TODO: What to do when no everything was read but errno is zero?
 	}
 	else {
 		state->num_unknown_errors = 0; // Clear non-consecutive unknown errors
