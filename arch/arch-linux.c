@@ -223,14 +223,16 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	}
 
 	if (hdr.status != 0) {
-		// No sense but we have an error, consider it fatal
+		// No sense but we have an error, consider it fatal if no data returned
 		ERROR("IO failed with no sense: status=%d (%s) mask=%d driver=%d (%s) msg=%d host=%d (%s)",
 				hdr.status, status_code_to_str(hdr.status),
 				hdr.masked_status,
 				hdr.driver_status, driver_status_to_str(hdr.driver_status),
 				hdr.msg_status,
 				hdr.host_status, host_status_to_str(hdr.host_status));
-		io_res->error = ERROR_UNKNOWN;
+
+		if (*buf_read == 0)
+			io_res->error = ERROR_UNKNOWN;
 		return 0;
 	}
 
@@ -458,6 +460,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	int device_type;
 	if (!parse_inquiry(buf, buf_read, &device_type, vendor, model, fw_rev, serial))
 	{
+		INFO("Failed to parse the inquiry data");
 		return -1;
 	}
 	strtrim(vendor);
