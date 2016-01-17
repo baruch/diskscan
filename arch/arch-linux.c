@@ -452,7 +452,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	*ata_buf_len = 0;
 	memset(buf, 0, sizeof(buf));
 
-	cdb_len = cdb_inquiry_simple(cdb, 32);
+	cdb_len = cdb_inquiry_simple(cdb, 64);
 	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
 	if (ret < 0)
 		return -1;
