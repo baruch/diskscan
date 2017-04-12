@@ -20,6 +20,9 @@
 #include <netinet/in.h>
 #include <mntent.h>
 
+#define LONG_TIMEOUT (60*1000) // 1 minutes
+#define SHORT_TIMEOUT (5*1000) // 5 seconds
+
 static void strtrim(char *s)
 {
 	char *t;
@@ -150,7 +153,7 @@ static const char *driver_status_to_str(int driver_status)
 
 static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 		unsigned char *buf, unsigned buf_len,
-		int dxfer_direction,
+		int dxfer_direction, unsigned timeout,
 		unsigned char *sense, unsigned sense_len,
 		unsigned *buf_read, unsigned *sense_read,
 		io_result_t *io_res)
@@ -172,7 +175,7 @@ static int sg_ioctl(int fd, unsigned char *cdb, unsigned cdb_len,
 	hdr.dxferp = buf;
 	hdr.cmdp = cdb;
 	hdr.sbp = sense;
-	hdr.timeout = 10*60*1000; /* timeout in milliseconds */
+	hdr.timeout = timeout; /* timeout in milliseconds */
 	hdr.flags = SG_FLAG_LUN_INHIBIT;
 	hdr.pack_id = 0;
 	hdr.usr_ptr = 0;
@@ -327,12 +330,12 @@ void disk_dev_close(disk_dev_t *dev)
 
 void disk_dev_cdb_out(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
 {
-	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_TO_DEV, sense, sense_size, buf_read, sense_read, io_res);
+	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_TO_DEV, LONG_TIMEOUT, sense, sense_size, buf_read, sense_read, io_res);
 }
 
 void disk_dev_cdb_in(disk_dev_t *dev, unsigned char *cdb, unsigned cdb_len, unsigned char *buf, unsigned buf_size, unsigned *buf_read, unsigned char *sense, unsigned sense_size, unsigned *sense_read, io_result_t *io_res)
 {
-	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_FROM_DEV, sense, sense_size, buf_read, sense_read, io_res);
+	sg_ioctl(dev->fd, cdb, cdb_len, buf, buf_size, SG_DXFER_FROM_DEV, LONG_TIMEOUT, sense, sense_size, buf_read, sense_read, io_res);
 }
 
 ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes, void *buf, io_result_t *io_res)
@@ -348,7 +351,7 @@ ssize_t disk_dev_read(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_bytes
 	memset(io_res, 0, sizeof(*io_res));
 
 	cdb_len = cdb_read_10(cdb, false, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_FROM_DEV, LONG_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, io_res);
 	if (ret < 0) {
 		return -1;
 	}
@@ -374,7 +377,7 @@ ssize_t disk_dev_write(disk_dev_t *dev, uint64_t offset_bytes, uint32_t len_byte
 	memset(io_res, 0, sizeof(*io_res));
 
 	cdb_len = cdb_write_10(cdb, false, offset_bytes / dev->sector_size, len_bytes / dev->sector_size);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_TO_DEV, sense, sizeof(sense), &buf_read, &sense_read, io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, len_bytes, SG_DXFER_TO_DEV, LONG_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, io_res);
 	if (ret < 0) {
 		return -1;
 	}
@@ -401,7 +404,7 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 	memset(buf, 0, sizeof(buf));
 
 	cdb_len = cdb_read_capacity_10(cdb);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, SHORT_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
 	if (ret < 0)
 		return -1;
 
@@ -421,7 +424,7 @@ int disk_dev_read_cap(disk_dev_t *dev, uint64_t *size_bytes, uint64_t *sector_si
 
 	// disk size is too large for READ CAPACITY 10, need to use READ CAPACITY 16
 	cdb_len = cdb_read_capacity_16(cdb, sizeof(buf));
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, SHORT_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
 	if (ret < 0)
 		return -1;
 
@@ -453,7 +456,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	memset(buf, 0, sizeof(buf));
 
 	cdb_len = cdb_inquiry_simple(cdb, 96);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, SHORT_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
 	if (ret < 0)
 		return -1;
 
@@ -477,7 +480,7 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	// For an ATA disk we need to get the proper ATA IDENTIFY response
 	memset(buf, 0, sizeof(buf));
 	cdb_len = cdb_ata_identify(cdb);
-	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
+	ret = sg_ioctl(dev->fd, cdb, cdb_len, buf, sizeof(buf), SG_DXFER_FROM_DEV, SHORT_TIMEOUT, sense, sizeof(sense), &buf_read, &sense_read, &io_res);
 	if (ret < 0)
 		return -1;
 
