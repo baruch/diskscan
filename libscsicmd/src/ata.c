@@ -84,8 +84,10 @@ int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *at
 	if (!ata_check_ata_smart_read_data_checksum(buf))
 		return -1;
 
+	/* // Some disks do not return this expected value (Ticket #55)
 	if (ata_get_ata_smart_read_data_version(buf) != 0x0010)
 		return -1;
+	*/
 
 	int i, j;
 
@@ -117,8 +119,10 @@ int ata_parse_ata_smart_read_thresh(const unsigned char *buf, ata_smart_thresh_t
 	if (!ata_check_ata_smart_read_data_checksum(buf))
 		return -1;
 
+	/* // Some disks do not return this expected value (Ticket #55)
 	if (ata_get_ata_smart_read_data_version(buf) != 0x0010)
 		return -1;
+	*/
 
 	int i, j;
 
