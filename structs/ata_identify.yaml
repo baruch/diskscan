@@ -74,8 +74,40 @@ ata_identify:
     non_volatile_cache:
         bit: [69, 2]
 
-#    queue_depth:
-#        bits: [75, 0, 4]
+    queue_depth:
+        bits: [75, 0, 4]
+
+    supports_read_log_dma_ext_as_read_log_dma:
+        bit: [76, 15]
+    supports_dev_automatic_partial_to_slumber:
+        bit: [76, 14]
+    supports_host_automatic_partial_to_slumber:
+        bit: [76, 13]
+    supports_ncq_priority:
+        bit: [76, 12]
+    supports_unload_while_ncq_outstanding:
+        bit: [76, 11]
+    supports_sata_phy_event_counters_log:
+        bit: [76, 10]
+    supports_receipt_of_host_initiated_power_management_requests:
+        bit: [76, 9]
+    supports_ncq:
+        bit: [76, 8]
+    supports_sata_gen3_6gbps:
+        bit: [76, 3]
+    supports_sata_gen2_3gbps:
+        bit: [76, 2]
+    supports_sata_gen1_1_5gbps:
+        bit: [76, 1]
+
+    supports_receive_fpdma_queued:
+        bit: [77, 6]
+    supports_ncq_queue_management_commands:
+        bit: [77, 5]
+    supports_ncq_streaming:
+        bit: [77, 4]
+    current_negotiated_link_speed:
+        bits: [77, 1, 3]
 
     sata_automatic_partial_to_slumber_transitions_enabled:
         bit: [79, 7]
@@ -127,10 +159,25 @@ ata_identify:
 
     address_48bit_supported:
         bit: [83, 10]
+    spin_up_supported:
+        bit: [83, 6]
+    puis_supported:
+        bit: [83, 5]
+    apm_supported:
+        bit: [83, 3]
+    cfa_supported:
+        bit: [83, 2]
+    download_microcode_supported:
+        bit: [83, 0]
 
+    wwn_64bit_supported:
+        bit: [84, 8]
+    gpl_supported:
+        bit: [84, 5]
+    streaming_supported:
+        bit: [84, 4]
     smart_self_test_supported:
         bit: [84, 1]
-
     smart_error_logging_supported:
         bit: [84, 0]
 
@@ -160,5 +207,21 @@ ata_identify:
         bit: [206, 2]
     sct_command_transport_supported:
         bit: [206, 0]
+
+    rotational_rate:
+        bits: [216, 0, 15]
+
+    wwn_high:
+        longword: 108
+    wwn_low:
+        longword: 110
+
+    additional_product_identifier:
+        string: [170, 173]
+    current_media_serial:
+        string: [176, 205]
+
+    extended_num_user_addressable_sectors:
+        qword: 230
 
 # vim:set et ts=4 sw=4:

@@ -18,24 +18,19 @@
 #include <assert.h>
 #include <memory.h>
 
-/*
-bool ata_inq_checksum(unsigned char *buf, int buf_len)
+
+bool ata_inquiry_checksum_verify(const unsigned char *buf, int buf_len)
 {
-	char sum;
-	int idx;
+	if (buf_len != 512)
+		return false;
 
 	if (buf[511] != 0xA5) {
 		// Checksum isn't claimed to be valid, nothing to check here
-		return 1;
+		return true;
 	}
 
-	for (idx = 0, sum = 0; idx < buf_len; idx++) {
-		sum += buf[idx];
-	}
-
-	return sum == 0;
+	return ata_checksum_verify(buf);
 }
-*/
 
 bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_t *status)
 {
@@ -76,7 +71,7 @@ bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_
 
 uint16_t ata_get_ata_smart_read_data_version(const unsigned char *buf)
 {
-	return ata_get_word((const char *)buf, 0);
+	return ata_get_word(buf, 0);
 }
 
 int ata_parse_ata_smart_read_data(const unsigned char *buf, ata_smart_attr_t *attrs, int max_attrs)

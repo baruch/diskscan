@@ -24,6 +24,15 @@ target_link_libraries(scsi_inquiry testlib scsicmd)
 add_executable(scsi_log_sense scsi_log_sense.c)
 target_link_libraries(scsi_log_sense testlib scsicmd)
 
+add_executable(parse_scsi parse_scsi.c)
+target_link_libraries(parse_scsi testlib scsicmd)
+
+add_executable(scsi_mode_sense scsi_mode_sense.c)
+target_link_libraries(scsi_mode_sense testlib scsicmd)
+
+add_executable(scsi_receive_diagnostics scsi_receive_diagnostics.c)
+target_link_libraries(scsi_receive_diagnostics testlib scsicmd)
+
 add_executable(scsi_read_capacity_10 scsi_read_capacity_10.c)
 target_link_libraries(scsi_read_capacity_10 testlib scsicmd)
 
@@ -32,3 +41,6 @@ target_link_libraries(scsi_read_capacity_16 testlib scsicmd)
 
 add_executable(sense_decode sense_decode.c)
 target_link_libraries(sense_decode testlib scsicmd)
+
+add_executable(collect_raw_data collect_raw_data.c)
+target_link_libraries(collect_raw_data testlib scsicmd)

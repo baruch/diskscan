@@ -3,6 +3,17 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+void cdb_dump(unsigned char *cdb, int cdb_len)
+{
+	int i;
+
+	printf("CDB: ");
+	for (i = 0; i < cdb_len; i++) {
+		printf("%02x ", cdb[i]);
+	}
+	printf("\n");
+}
+
 void response_dump(unsigned char *buf, int buf_len)
 {
 	int i;
