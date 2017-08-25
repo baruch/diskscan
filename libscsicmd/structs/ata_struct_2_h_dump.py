@@ -5,7 +5,7 @@ import yaml
 
 def emit_header(structs):
 	for name, struct in list(structs.items()):
-		print('void dump_%s(const char *buf);' % name)
+		print('void dump_%s(const unsigned char *buf);' % name)
 
 def emit_prefix():
 	print('#ifndef _DUMP_H_')

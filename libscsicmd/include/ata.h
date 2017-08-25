@@ -23,6 +23,7 @@
 
 typedef uint16_t ata_word_t;
 typedef uint32_t ata_longword_t;
+typedef uint64_t ata_qword_t;
 
 typedef enum passthrough_protocol_e {
 	PT_PROTO_HARDWARE_RESET = 0,
@@ -47,12 +48,12 @@ typedef enum ata_passthrough_len_spec_e {
 	ATA_PT_LEN_SPEC_TPSIU        = 3,
 } ata_passthrough_len_spec_e;
 
-static inline ata_word_t ata_get_word(const char *buf, int word)
+static inline ata_word_t ata_get_word(const unsigned char *buf, int word)
 {
 	return (uint16_t)(buf[word*2+1])<<8 | buf[word*2];
 }
 
-static inline uint16_t ata_get_bits(const char *buf, int word, int start_bit, int end_bit)
+static inline uint16_t ata_get_bits(const unsigned char *buf, int word, int start_bit, int end_bit)
 {
 	uint16_t val = ata_get_word(buf, word);
 	uint16_t shift = start_bit;
@@ -80,12 +81,12 @@ static inline uint16_t ata_get_bits(const char *buf, int word, int start_bit, in
 	return (val >> shift) & mask;
 }
 
-static inline bool ata_get_bit(char *buf, int word, int bit)
+static inline bool ata_get_bit(const unsigned char *buf, int word, int bit)
 {
 	return ata_get_bits(buf, word, bit, bit);
 }
 
-static inline char *ata_get_string(const char *buf, int word_start, int word_end, char *str)
+static inline char *ata_get_string(const unsigned char *buf, int word_start, int word_end, char *str)
 {
 	int word;
 	int i;
@@ -100,7 +101,7 @@ static inline char *ata_get_string(const char *buf, int word_start, int word_end
 	return str;
 }
 
-static inline ata_longword_t ata_get_longword(const char *buf, int start_word)
+static inline ata_longword_t ata_get_longword(const unsigned char *buf, int start_word)
 {
 	ata_longword_t high = ata_get_word(buf, start_word+1);
 	ata_longword_t low = ata_get_word(buf, start_word);
@@ -108,7 +109,15 @@ static inline ata_longword_t ata_get_longword(const char *buf, int start_word)
 	return longword;
 }
 
-bool ata_inquiry_checksum_verify(const char *buf, int buf_len);
+static inline ata_qword_t ata_get_qword(const unsigned char *buf, int start_word)
+{
+	ata_qword_t low = ata_get_longword(buf, start_word);
+	ata_qword_t high = ata_get_longword(buf, start_word+2);
+	ata_qword_t qword = high << 32 | low;
+	return qword;
+}
+
+bool ata_inquiry_checksum_verify(const unsigned char *buf, int buf_len);
 
 static inline unsigned char ata_passthrough_flags_2(int offline, int ck_cond, int direction_in, int transfer_block, ata_passthrough_len_spec_e len_spec)
 {
@@ -195,6 +204,10 @@ static inline int cdb_ata_smart_read_data(unsigned char *cdb)
 	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD0, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
 }
 
+static inline int cdb_ata_smart_read_log(unsigned char *cdb, uint8_t log_addr, uint8_t num_pages)
+{
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD5, (0xC24F<<8) | log_addr, num_pages, PT_PROTO_PIO_DATA_IN, true, 0);
+}
 
 static inline int cdb_ata_smart_read_threshold(unsigned char *cdb)
 {
@@ -204,6 +217,12 @@ static inline int cdb_ata_smart_read_threshold(unsigned char *cdb)
 static inline int cdb_ata_check_power_mode(unsigned char *cdb)
 {
 	return cdb_ata_passthrough_12(cdb, 0xE5, 0, 0, 0, PT_PROTO_NON_DATA, true, 1);
+}
+
+static inline int cdb_ata_read_log_ext(unsigned char *cdb, uint16_t block_count, uint16_t page_number, uint8_t log_address)
+{
+	uint64_t lba = ((page_number & 0xFF00) << 24) | ((page_number & 0xFF) << 8) | log_address;
+	return cdb_ata_passthrough_16(cdb, 0x2F, 0, lba, block_count, PT_PROTO_PIO_DATA_IN, true, false, 0);
 }
 
 /* Parse ATA SMART READ DATA results */
@@ -222,7 +241,10 @@ typedef struct ata_smart_thresh {
 	uint8_t threshold;
 } ata_smart_thresh_t;
 
-static inline uint8_t ata_calc_ata_smart_read_data_checksum(const unsigned char *buf) {
+/** Calculate the page checksum for an ATA buffer, this is needed on ATA IDENTIFY DEVICE and in SMART commands.
+ * We assume the buffer size is 512 always.
+ */
+static inline uint8_t ata_calc_checksum(const unsigned char *buf) {
 	unsigned val = 0;
 	int i;
 	for (i = 0; i < 511; i++)
@@ -230,12 +252,16 @@ static inline uint8_t ata_calc_ata_smart_read_data_checksum(const unsigned char 
 	return 0x100 - (val & 0xFF); // We want the complement
 }
 
+static inline bool ata_checksum_verify(const unsigned char *buf) {
+	return ata_calc_checksum(buf) == buf[511];
+}
+
 static inline uint8_t ata_get_ata_smart_read_data_checksum(const unsigned char *buf) {
 	return buf[511];
 }
 
 static inline bool ata_check_ata_smart_read_data_checksum(const unsigned char *buf) {
-	return ata_get_ata_smart_read_data_checksum(buf) == ata_calc_ata_smart_read_data_checksum(buf);
+	return ata_checksum_verify(buf);
 }
 
 uint16_t ata_get_ata_smart_read_data_version(const unsigned char *buf);

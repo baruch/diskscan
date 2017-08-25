@@ -17,6 +17,7 @@
 #include "ata.h"
 #include "ata_parse.h"
 #include "ata_smart.h"
+#include "sense_dump.h"
 #include "main.h"
 #include "smartdb.h"
 #include <stdio.h>
@@ -47,7 +48,7 @@ static bool read_data(int fd, unsigned char *buf, int buf_len)
 	response_dump(buf, sizeof(buf));
 
 	printf("Page checksum read: %02X\n", ata_get_ata_smart_read_data_checksum(buf));
-	printf("Page checksum calc: %02X\n", ata_calc_ata_smart_read_data_checksum(buf));
+	printf("Page checksum calc: %02X\n", ata_calc_checksum(buf));
 	printf("Page checksum matches: %s\n", ata_check_ata_smart_read_data_checksum(buf) ? "true" : "false");
 	printf("Page version: %04Xh\n", ata_get_ata_smart_read_data_version(buf));
 	if (ata_get_ata_smart_read_data_version(buf) != 0x10) {
@@ -82,7 +83,7 @@ static bool read_threshold(int fd, unsigned char *buf, int buf_len)
 	response_dump(buf, sizeof(buf));
 
 	printf("Page checksum read: %02X\n", ata_get_ata_smart_read_data_checksum(buf));
-	printf("Page checksum calc: %02X\n", ata_calc_ata_smart_read_data_checksum(buf));
+	printf("Page checksum calc: %02X\n", ata_calc_checksum(buf));
 	printf("Page checksum matches: %s\n", ata_check_ata_smart_read_data_checksum(buf) ? "true" : "false");
 	printf("Page version: %04Xh\n", ata_get_ata_smart_read_data_version(buf));
 	if (ata_get_ata_smart_read_data_version(buf) != 0x10) {

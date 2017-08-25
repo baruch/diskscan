@@ -54,7 +54,7 @@ void do_command(int fd)
 	}
 
 	if (!sense)
-		dump_ata_identify((char *)buf);
+		dump_ata_identify(buf);
 	else
 		printf("error while reading ATA IDENTIFY, nothing to show\n");
 }
