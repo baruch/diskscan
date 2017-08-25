@@ -26,6 +26,8 @@ else()
 endif()
 
 # Find tinfo for termcap functions
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES(termcap.h HAVE_TERMCAP_H)
 find_library(tinfo_LIBRARY NAMES tinfo curses)
 
 # Architecture files
