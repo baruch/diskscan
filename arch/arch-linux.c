@@ -484,13 +484,13 @@ int disk_dev_identify(disk_dev_t *dev, char *vendor, char *model, char *fw_rev, 
 	if (ret < 0)
 		return -1;
 
-	ata_get_ata_identify_model((char*)buf, vendor);
+	ata_get_ata_identify_model(buf, vendor);
 	strtrim(vendor);
 	strcpy(model, vendor + strlen(vendor) + 1);
 	strtrim(model);
-	ata_get_ata_identify_fw_rev((char*)buf, fw_rev);
+	ata_get_ata_identify_fw_rev(buf, fw_rev);
 	strtrim(fw_rev);
-	ata_get_ata_identify_serial_number((char*)buf, serial);
+	ata_get_ata_identify_serial_number(buf, serial);
 	strtrim(serial);
 
 	memcpy(ata_buf, buf, buf_read);
