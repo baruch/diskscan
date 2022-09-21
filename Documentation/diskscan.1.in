@@ -81,4 +81,4 @@ the scan progress and the disk behavior during the scan. This is too a JSON file
 .SH "SEE ALSO"
 \fBbadblocks\fR(1), \fBfsck\fR(1)
 .SH AUTHOR
-Baruch Even \\<baruch@ev-en.org>
+Baruch Even <baruch@ev-en.org>
