@@ -131,11 +131,11 @@ static void disk_output(FILE *f, disk_t *disk, int indent)
 	add_indent(f, indent); fprintf(f, "\"FwRev\": \"%s\",\n", disk->fw_rev);
 	add_indent(f, indent); fprintf(f, "\"Serial\": \"%s\",\n", disk->serial);
 	add_indent(f, indent); fprintf(f, "\"NumSectors\": %"PRIu64",\n", disk->num_bytes / disk->sector_size);
-	add_indent(f, indent); fprintf(f, "\"SectorSize\": %"PRIu64"\n", disk->sector_size);
+	add_indent(f, indent); fprintf(f, "\"SectorSize\": %"PRIu64",\n", disk->sector_size);
 	if (disk->is_ata && disk->ata_buf_len > 0) {
 		unsigned char ata_hex[512*2+1];
 		buf_to_hex(disk->ata_buf, disk->ata_buf_len, ata_hex, sizeof(ata_hex));
-		add_indent(f, indent); fprintf(f, "\"AtaIdentifyRaw\": \"%s\",\n", ata_hex);
+		add_indent(f, indent); fprintf(f, "\"AtaIdentifyRaw\": \"%s\"\n", ata_hex);
 	}
 	add_indent(f, indent); fprintf(f, "}");
 }
@@ -233,7 +233,7 @@ static void histogram_output(FILE *f, struct hdr_histogram *histogram, int inden
 	hdr_log_encode(histogram, &encoded_histogram);
 
 	add_indent(f, indent);
-	fprintf(f, "\"Histogram\": \"%s\"\n", encoded_histogram);
+	fprintf(f, "\"Histogram\": \"%s\",\n", encoded_histogram);
 
 	free(encoded_histogram);
 }
