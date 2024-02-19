@@ -18,6 +18,12 @@ In essence badblocks looks for fatal issues already happening and diskscan is fo
 
 Also, badblocks is essentially obsolete in this day and age since the disks themselves will reallocate the data and there is no real need to map the bad blocks in the filesystem level anymore.
 
+# Supported Drives
+
+This tool is focused on SAS/SATA drives that work through the SCSI interface of the kernel.
+
+SD Cards and NVMe devices are not currently scannable with this tool.
+
 ## Build
 
 This project is using CMake, on Debian/Ubuntu it is as simple as:
