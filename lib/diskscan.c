@@ -162,7 +162,7 @@ static void ata_test_temp(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
 		while (temp >= TEMP_THRESHOLD) {
 			sleep(1);
 			spinner_update(&spinner);
-			smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+			smart_num = disk_smart_attributes(&disk->dev, smart, smart_num);
 			if (smart_num > 0) {
 				temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
 			} else {
