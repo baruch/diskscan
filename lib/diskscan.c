@@ -55,6 +55,12 @@ struct scan_state {
 	unsigned num_unknown_errors;
 };
 
+struct scan_order {
+	/* A latency bucket can span more than UINT32_MAX bytes. */
+	uint64_t *offsets;
+	size_t count;
+};
+
 typedef int spinner_t;
 
 static char spinner_form[] = {'|', '/', '-', '\\', '|', '/', '-', '\\'};
@@ -573,55 +579,52 @@ static uint64_t calc_latency_stride(disk_t *disk)
 	return stride_size + 1;
 }
 
-static uint32_t *calc_scan_order_seq(disk_t *disk, uint64_t stride_size, int read_size_sectors)
+static bool calc_scan_order_seq(disk_t *disk, uint64_t stride_size, int read_size_sectors, struct scan_order *order)
 {
-	uint64_t num_reads = stride_size / read_size_sectors + 2;
-	uint32_t *order = malloc(sizeof(uint32_t) * num_reads);
+	uint64_t num_reads = stride_size / read_size_sectors;
+	if (stride_size % read_size_sectors != 0)
+		num_reads++;
+	if (num_reads > SIZE_MAX / sizeof(*order->offsets))
+		return false;
 
-	uint64_t i;
-	for (i = 0; i < num_reads-1; i++)
-		order[i] = i * read_size_sectors * disk->sector_size;
-	order[i] = UINT32_MAX;
+	order->offsets = malloc(sizeof(*order->offsets) * num_reads);
+	if (order->offsets == NULL)
+		return false;
+	order->count = (size_t)num_reads;
 
-	return order;
+	for (size_t i = 0; i < order->count; i++)
+		order->offsets[i] = (uint64_t)i * read_size_sectors * disk->sector_size;
+
+	return true;
 }
 
-static uint32_t *calc_scan_order_random(disk_t *disk, uint64_t stride_size, int read_size_sectors)
+static bool calc_scan_order_random(disk_t *disk, uint64_t stride_size, int read_size_sectors, struct scan_order *order)
 {
-	uint64_t num_reads = stride_size / read_size_sectors + 2;
-	uint32_t *order = malloc(sizeof(uint32_t) * num_reads);
-
-	// Fill sequential data
-	uint64_t i;
-	for (i = 0; i < num_reads - 1; i++)
-		order[i] = i * read_size_sectors * disk->sector_size;
-	order[i] = UINT32_MAX;
+	if (!calc_scan_order_seq(disk, stride_size, read_size_sectors, order))
+		return false;
 
 	// Shuffle it
 	srand(time(NULL));
-	for (i = 0; i < num_reads - 1; i++) {
-		uint64_t j = rand() % num_reads;
-		if (i == j)
-			continue;
-
-		uint32_t tmp = order[i];
-		order[i] = order[j];
-		order[j] = tmp;
+	for (size_t i = order->count; i > 1; i--) {
+		size_t j = (size_t)rand() % i;
+		uint64_t tmp = order->offsets[i - 1];
+		order->offsets[i - 1] = order->offsets[j];
+		order->offsets[j] = tmp;
 	}
 
-	return order;
+	return true;
 }
 
-static uint32_t *calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t stride_size, int read_size)
+static bool calc_scan_order(disk_t *disk, enum scan_mode mode, uint64_t stride_size, int read_size, struct scan_order *order)
 {
 	int read_size_sectors = read_size / disk->sector_size;
 
 	if (mode == SCAN_MODE_SEQ)
-		return calc_scan_order_seq(disk, stride_size, read_size_sectors);
+		return calc_scan_order_seq(disk, stride_size, read_size_sectors, order);
 	else if (mode == SCAN_MODE_RANDOM)
-		return calc_scan_order_random(disk, stride_size, read_size_sectors);
+		return calc_scan_order_random(disk, stride_size, read_size_sectors, order);
 	else
-		return NULL;
+		return false;
 }
 
 static void progress_calc(disk_t *disk, struct scan_state *state, uint64_t add)
@@ -642,27 +645,27 @@ static void progress_calc(disk_t *disk, struct scan_state *state, uint64_t add)
 	}
 }
 
-static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, uint64_t data_size, uint32_t *scan_order)
+static bool disk_scan_latency_stride(disk_t *disk, struct scan_state *state, uint64_t base_offset, unsigned data_size, const struct scan_order *order)
 {
-	unsigned i;
 	uint64_t stride_end = base_offset + state->latency_stride * disk->sector_size;
 	if (stride_end > disk->num_bytes)
 		stride_end = disk->num_bytes;
 
-	for (i = 0; disk->run && scan_order[i] != UINT32_MAX; i++) {
-		uint64_t offset = base_offset + scan_order[i];
-
-		progress_calc(disk, state, data_size);
-
-		VVVERBOSE("Scanning at offset %"PRIu64" index %u", offset, i);
-		int64_t remainder = stride_end - offset;
-		if (remainder < (int64_t)data_size) {
-			data_size = remainder;
-			VERBOSE("Last part scanning size %"PRIu64, data_size);
-		}
-		if (offset > disk->num_bytes || (offset+remainder) > disk->num_bytes)
+	for (size_t i = 0; disk->run && i < order->count; i++) {
+		uint64_t offset = base_offset + order->offsets[i];
+		if (offset >= stride_end)
 			continue;
-		if (!disk_scan_part(disk, offset, state->data, data_size, state))
+
+		VVVERBOSE("Scanning at offset %"PRIu64" index %zu", offset, i);
+		uint64_t remainder = stride_end - offset;
+		unsigned current_size = data_size;
+		if (remainder < current_size) {
+			current_size = (unsigned)remainder;
+			VERBOSE("Last part scanning size %u", current_size);
+		}
+
+		progress_calc(disk, state, current_size);
+		if (!disk_scan_part(disk, offset, state->data, current_size, state))
 			return false;
 	}
 
@@ -700,7 +703,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 {
 	disk->run = 1;
 	void *data = allocate_buffer(data_size);
-	uint32_t *scan_order = NULL;
+	struct scan_order order = {0};
 	int result = 0;
 	struct scan_state state = {.latency = NULL, .progress_bytes = 0, .progress_full = 1000};
 	struct timespec ts_start;
@@ -741,8 +744,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 	state.latency = malloc(sizeof(uint32_t) * latency_stride);
 	state.data = data;
 
-	scan_order = calc_scan_order(disk, mode, latency_stride, data_size);
-	if (!scan_order) {
+	if (!calc_scan_order(disk, mode, latency_stride, data_size, &order)) {
 		result = 1;
 		ERROR("Failed to generate scan order");
 		goto Exit;
@@ -753,7 +755,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 		VERBOSE("Scanning stride starting at %"PRIu64" done %"PRIu64"%%", offset, offset*100/disk_size_bytes);
 		progress_calc(disk, &state, 0);
 		latency_bucket_prepare(disk, &state, offset);
-		if (!disk_scan_latency_stride(disk, &state, offset, data_size, scan_order))
+		if (!disk_scan_latency_stride(disk, &state, offset, data_size, &order))
 			break;
 		latency_bucket_finish(disk, &state, offset + latency_stride * disk->sector_size);
 
@@ -775,7 +777,7 @@ int disk_scan(disk_t *disk, enum scan_mode mode, unsigned data_size)
 Exit:
 	clock_gettime(CLOCK_MONOTONIC, &ts_end);
 	set_realtime(false);
-	free(scan_order);
+	free(order.offsets);
 	free_buffer(data, data_size);
 	free(state.latency);
 	disk->run = 0;
