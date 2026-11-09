@@ -178,7 +178,9 @@ static inline int cdb_ata_identify_16(unsigned char *cdb)
 
 static inline int cdb_ata_smart_return_status(unsigned char *cdb)
 {
-	return cdb_ata_passthrough_12(cdb, 0xB0, 0xDA, 0xC24F<<8, 1, PT_PROTO_DMA, true, 1);
+	int len = cdb_ata_passthrough_12(cdb, 0xB0, 0xDA, 0xC24F<<8, 0, PT_PROTO_NON_DATA, false, 1);
+	cdb[2] = ata_passthrough_flags_2(0, 1, 0, 0, ATA_PT_LEN_SPEC_NONE);
+	return len;
 }
 
 bool ata_status_from_scsi_sense(unsigned char *sense, int sense_len, ata_status_t *status);
@@ -201,7 +203,7 @@ static inline bool ata_smart_return_status_result(unsigned char *sense, int sens
 
 static inline int cdb_ata_smart_read_data(unsigned char *cdb)
 {
-	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD0, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD0, 0xC24F<<8, 1, PT_PROTO_PIO_DATA_IN, true, 0);
 }
 
 static inline int cdb_ata_smart_read_log(unsigned char *cdb, uint8_t log_addr, uint8_t num_pages)
@@ -211,7 +213,7 @@ static inline int cdb_ata_smart_read_log(unsigned char *cdb, uint8_t log_addr, u
 
 static inline int cdb_ata_smart_read_threshold(unsigned char *cdb)
 {
-	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD1, 0xC24F<<8, 1, PT_PROTO_DMA, true, 0);
+	return cdb_ata_passthrough_12(cdb, 0xB0, 0xD1, 0xC24F<<8, 1, PT_PROTO_PIO_DATA_IN, true, 0);
 }
 
 static inline int cdb_ata_check_power_mode(unsigned char *cdb)
