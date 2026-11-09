@@ -103,8 +103,22 @@ enum scan_mode str_to_scan_mode(const char *s)
 	return SCAN_MODE_UNKNOWN;
 }
 
+static int disk_ata_read_attributes(disk_t *disk, ata_smart_attr_t *smart, int max_attrs)
+{
+	if (!disk->state.ata.smart_attributes_available)
+		return -1;
+
+	int count = disk_smart_attributes(&disk->dev, smart, max_attrs);
+	if (count <= 0) {
+		disk->state.ata.smart_attributes_available = false;
+		INFO("SMART attribute monitoring disabled for this scan; disk reads will continue");
+	}
+	return count;
+}
+
 static void disk_ata_monitor_start(disk_t *disk)
 {
+	disk->state.ata.smart_attributes_available = true;
 	if (disk_smart_trip(&disk->dev) == 1) {
 		ERROR("Disk has a SMART TRIP at the start of the test, it should be discarded anyhow");
 		disk->state.ata.is_smart_tripped = true;
@@ -116,7 +130,7 @@ static void disk_ata_monitor_start(disk_t *disk)
 	if (disk->state.ata.smart_table == NULL)
 		ERROR("BUG! Failed to setup smart table for the disk.");
 
-	disk->state.ata.smart_num = disk_smart_attributes(&disk->dev, disk->state.ata.smart, ARRAY_SIZE(disk->state.ata.smart));
+	disk->state.ata.smart_num = disk_ata_read_attributes(disk, disk->state.ata.smart, ARRAY_SIZE(disk->state.ata.smart));
 
 	if (disk->state.ata.smart_num > 0) {
 		// First look at temperatures
@@ -139,8 +153,6 @@ static void disk_ata_monitor_start(disk_t *disk)
 		// Now take a first look at the CRC error counters
 		disk->state.ata.last_crc_errors = ata_smart_get_num_crc_errors(disk->state.ata.smart, disk->state.ata.smart_num,
 				disk->state.ata.smart_table);
-	} else {
-		ERROR("Failed to read SMART attributes from device");
 	}
 }
 
@@ -162,11 +174,10 @@ static void ata_test_temp(disk_t *disk, ata_smart_attr_t *smart, int smart_num)
 		while (temp >= TEMP_THRESHOLD) {
 			sleep(1);
 			spinner_update(&spinner);
-			smart_num = disk_smart_attributes(&disk->dev, smart, smart_num);
+			smart_num = disk_ata_read_attributes(disk, smart, smart_num);
 			if (smart_num > 0) {
 				temp = ata_smart_get_temperature(smart, smart_num, disk->state.ata.smart_table, &min_temp, &max_temp);
 			} else {
-				ERROR("Failed to read temperature while paused!");
 				break;
 			}
 		}
@@ -217,14 +228,12 @@ static void disk_ata_monitor(disk_t *disk)
 		disk->state.ata.is_smart_tripped = true;
 	}
 
-	smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+	smart_num = disk_ata_read_attributes(disk, smart, ARRAY_SIZE(smart));
 
 	if (smart_num > 0) {
 		ata_test_temp(disk, smart, smart_num);
 		ata_test_reallocs(disk, smart, smart_num);
 		ata_test_crc_errors(disk, smart, smart_num);
-	} else {
-		ERROR("Failed to read SMART attributes from device");
 	}
 }
 
@@ -241,7 +250,9 @@ static void disk_ata_monitor_end(disk_t *disk)
 		ERROR("Disk had a SMART TRIP during the test but it disappeared. This is super weird!!!");
 	}
 
-	smart_num = disk_smart_attributes(&disk->dev, smart, ARRAY_SIZE(smart));
+	smart_num = disk_ata_read_attributes(disk, smart, ARRAY_SIZE(smart));
+	if (smart_num <= 0)
+		return;
 	num_reallocs = ata_smart_get_num_reallocations(smart, smart_num, disk->state.ata.smart_table);
 	num_pending_reallocs = ata_smart_get_num_pending_reallocations(smart, smart_num, disk->state.ata.smart_table);
 

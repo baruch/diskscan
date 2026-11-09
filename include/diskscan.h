@@ -46,6 +46,7 @@ typedef struct data_log_t {
 
 typedef struct ata_state_t {
 	bool is_smart_tripped;
+	bool smart_attributes_available;
 	const struct smart_table *smart_table;
 	ata_smart_attr_t smart[MAX_SMART_ATTRS];
 	int smart_num;
